@@ -160,6 +160,19 @@ function showDetails(index) {
         <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold gap-2 active:scale-95 transition-transform">💬 WhatsApp</a>
       </div>
 
+      <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex justify-between items-center shadow-sm">
+        <div class="flex-1">
+          <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Anschrift</p>
+          <p class="text-xs font-medium">${p.Adresse || 'Keine Adresse hinterlegt'}</p>
+        </div>
+        ${p.Adresse ? `
+          <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.Adresse)}" 
+             target="_blank" 
+             class="ml-4 bg-blue-50 text-blue-600 p-3 rounded-xl active:scale-90 transition-all shadow-inner">
+             📍
+          </a>` : ''}
+      </div>
+
       <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-100 dark:bg-green-900/20 border-l-4 border-green-500' : 'bg-slate-100 dark:bg-slate-700/50 border-l-4 border-slate-400'}">
         <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Status Beförderung</p>
         <p class="text-sm font-bold mt-1">Ziel: <span class="text-red-700">${promo.nextDG || 'Aktuell Endstufe'}</span></p>
