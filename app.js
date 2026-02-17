@@ -169,12 +169,13 @@ function checkPromotionStatus(p) {
 }
 
 function showDetails(index) {
+  // 1. Daten holen
   const p = appData.personnel[index];
   const promo = checkPromotionStatus(p);
   const content = document.getElementById('modal-content');
   const cleanPhone = p.Telefon ? p.Telefon.toString().replace(/\s+/g, '') : '';
 
-  // --- HILFSFUNKTIONEN INNERHALB ---
+  // 2. Hilfsfunktionen (Nur lokal für diese Ansicht)
   const formatDateClean = (dateStr) => {
     if (!dateStr || dateStr === '-') return '-';
     const raw = dateStr.split('T')[0]; 
@@ -185,10 +186,8 @@ function showDetails(index) {
     return raw;
   };
 
-  const getDienstzeitInfo = (eintrittStr) => {
-    // Falls das Feld im Sheet leer ist, wird hier "-" zurückgegeben
+  const calculateDZ = (eintrittStr) => {
     if (!eintrittStr || eintrittStr === '-') return { text: '-', isJubilaeum: false };
-    
     try {
       const parts = eintrittStr.split('.');
       if (parts.length < 3) return { text: '-', isJubilaeum: false };
@@ -208,15 +207,15 @@ function showDetails(index) {
         isJubilaeum: jubilaeen.includes(jahre) 
       };
     } catch (e) { 
-      return { text: "Fehler", isJubilaeum: false }; 
+      return { text: 'Fehler', isJubilaeum: false }; 
     }
   };
 
-  // NUR EINMAL DEKLARIEREN:
-  const dz = getDienstzeitInfo(p.Eintritt);
+  // 3. Werte berechnen (NUR EINMALIG!)
+  const dzResult = calculateDZ(p.Eintritt);
   const lehrgangsListe = ["Probezeit", "Grundausbildung", "Truppführer", "Gruppenführer", "Zugführer", "Verbandsführer 1", "Verbandsführer 2"];
 
-  // --- HTML INHALT ---
+  // 4. HTML zusammenbauen
   content.innerHTML = `
     <div class="mb-6">
       <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname}</h2>
@@ -227,14 +226,6 @@ function showDetails(index) {
       <div class="grid grid-cols-2 gap-3">
         <a href="tel:${cleanPhone}" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-slate-100 dark:bg-slate-700 p-4 rounded-2xl font-bold gap-2 active:scale-95 transition-transform">📞 Anrufen</a>
         <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold gap-2 active:scale-95 transition-transform">💬 WhatsApp</a>
-      </div>
-
-      <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex justify-between items-center">
-        <div class="flex-1">
-          <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Anschrift</p>
-          <p class="text-xs font-medium">${p.Adresse || 'Keine Adresse hinterlegt'}</p>
-        </div>
-        ${p.Adresse ? `<a href="https://maps.google.com/?q=${encodeURIComponent(p.Adresse)}" target="_blank" class="ml-4 bg-blue-50 text-blue-600 p-3 rounded-xl">📍</a>` : ''}
       </div>
 
       <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-100 dark:bg-green-900/20 border-l-4 border-green-500' : 'bg-slate-100 dark:bg-slate-700/50 border-l-4 border-slate-400'}">
@@ -255,8 +246,7 @@ function showDetails(index) {
               <div class="flex items-center justify-between text-xs py-1 border-b border-slate-50 dark:border-slate-700 last:border-0">
                 <span class="${hatLehrgang ? 'font-bold text-slate-800 dark:text-white' : 'text-slate-300 dark:text-slate-600'}">${lg}</span>
                 <span>${hatLehrgang ? '✅' : '🟣'}</span>
-              </div>
-            `;
+              </div>`;
           }).join('')}
         </div>
       </div>
@@ -266,13 +256,13 @@ function showDetails(index) {
           <p class="text-slate-400 uppercase font-bold">Geburtstag</p>
           <p class="font-medium">${formatDateClean(p.Geburtstag)}</p>
         </div>
-        <div class="${dz.isJubilaeum ? 'ring-2 ring-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 rounded p-1' : ''}">
+        <div class="${dzResult.isJubilaeum ? 'ring-2 ring-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 rounded p-1' : ''}">
           <p class="text-slate-400 uppercase font-bold flex items-center gap-1">
-            Letzte Bef. | Dienstzeit ${dz.isJubilaeum ? '🎖️' : ''}
+            Letzte Bef. | Dienstzeit ${dzResult.isJubilaeum ? '🎖️' : ''}
           </p>
           <p class="font-medium">
             ${formatDateClean(p.Letzte_Befoerderung)} | 
-            <span class="${dz.isJubilaeum ? 'text-yellow-600 font-black' : 'text-red-700 font-bold'}">${dz.text}</span>
+            <span class="${dzResult.isJubilaeum ? 'text-yellow-600 font-black' : 'text-red-700 font-bold'}">${dzResult.text}</span>
           </p>
         </div>
       </div>
