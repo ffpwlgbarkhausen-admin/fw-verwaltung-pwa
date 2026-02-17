@@ -129,29 +129,48 @@ function showDetails(index) {
   const promo = checkPromotionStatus(p);
   const content = document.getElementById('modal-content');
   
+  // Telefonnummer bereinigen (Leerzeichen entfernen)
+  const cleanPhone = p.Telefon ? p.Telefon.replace(/\s+/g, '') : '';
+
   content.innerHTML = `
     <div class="mb-6">
       <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname}</h2>
       <p class="text-red-700 font-bold">${p.Abteilung} • ${p.Dienstgrad}</p>
     </div>
     
-    <div class="space-y-4">
-      <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-100 dark:bg-green-900/20' : 'bg-slate-100 dark:bg-slate-700/50'}">
-        <p class="text-[10px] uppercase font-bold text-slate-500">Beförderungs-Check</p>
-        <p class="text-sm font-bold">Ziel: ${promo.nextDG || 'Kein Ziel definiert'}</p>
-        ${promo.isFällig ? '<p class="text-green-600 text-xs font-bold mt-1">✓ Alle Bedingungen erfüllt!</p>' : ''}
-        ${promo.missing.length > 0 ? `<p class="text-red-600 text-xs font-bold mt-1">⚠ Es fehlt: ${promo.missing.join(', ')}</p>` : ''}
+    <div class="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+      
+      <div class="grid grid-cols-2 gap-3">
+        <a href="tel:${cleanPhone}" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-slate-100 dark:bg-slate-700 p-4 rounded-2xl font-bold gap-2 active:scale-95 transition-transform">
+          <span>📞</span> Anrufen
+        </a>
+        <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold gap-2 active:scale-95 transition-transform">
+          <span>💬</span> WhatsApp
+        </a>
       </div>
 
-      <div class="grid grid-cols-2 gap-4 text-sm">
+      <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-100 dark:bg-green-900/20 border-l-4 border-green-500' : 'bg-slate-100 dark:bg-slate-700/50 border-l-4 border-slate-400'}">
+        <p class="text-[10px] uppercase font-bold text-slate-500">Beförderungs-Check zum ${new Date(appData.stichtag).toLocaleDateString('de-DE')}</p>
+        <div class="flex justify-between items-end mt-1">
+          <p class="text-sm font-bold">Ziel: <span class="text-red-700">${promo.nextDG || 'Endstufe'}</span></p>
+        </div>
+        ${promo.isFällig ? 
+          '<p class="text-green-600 text-[10px] font-bold mt-2 italic">✓ Alle Kriterien (Zeit & Lehrgang) erfüllt.</p>' : 
+          (promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2">⚠ Fehlend: ${promo.missing.join(', ')}</p>` : '<p class="text-slate-500 text-[10px] mt-2 italic">Keine weitere Beförderung geplant.</p>')
+        }
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 text-sm bg-white dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
         <div><p class="text-[10px] text-slate-400 uppercase font-bold">Geburtstag</p><p>${p.Geburtsdatum || '-'}</p></div>
-        <div><p class="text-[10px] text-slate-400 uppercase font-bold">Eintritt</p><p>${p.Eintrittsdatum || '-'}</p></div>
+        <div><p class="text-[10px] text-slate-400 uppercase font-bold">Letzte Bef.</p><p>${p.Letzte_Befoerderung || '-'}</p></div>
       </div>
 
       <div>
-        <p class="text-[10px] text-slate-400 uppercase font-bold mb-1">Vorhandene Lehrgänge</p>
+        <p class="text-[10px] text-slate-400 uppercase font-bold mb-2 ml-1">Lehrgangs-Portfolio</p>
         <div class="flex flex-wrap gap-1">
-          ${(p.Lehrgaenge || '').split(',').map(l => `<span class="bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded text-[10px]">${l.trim()}</span>`).join('')}
+          ${p.Lehrgaenge ? p.Lehrgaenge.split(',').map(l => 
+            `<span class="bg-red-50 dark:bg-red-900/10 text-red-700 dark:text-red-400 px-2 py-1 rounded-lg text-[10px] border border-red-100 dark:border-red-900/30">${l.trim()}</span>`
+          ).join('') : '<p class="text-xs text-slate-400 italic">Keine Daten hinterlegt</p>'}
         </div>
       </div>
     </div>
