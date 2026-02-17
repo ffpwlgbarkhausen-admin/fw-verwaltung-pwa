@@ -45,25 +45,28 @@ function renderDashboard() {
   list.innerHTML = "";
 
   const jubilaeen = [25, 35, 40, 50, 60, 70, 75, 80];
-  const stichtagJahr = new Date(appData.stichtag).getFullYear();
+  const stichtagDate = new Date(appData.stichtag);
+  const stichtagJahr = stichtagDate.getFullYear();
 
-  // 1. JUBILÄEN SAMMELN & SORTIEREN
   let aktuelleJubilare = [];
-  
+
   appData.personnel.forEach(p => {
-    if (p.Eintritt) {
+    // ANALYSE: Prüfen, ob Eintritt vorhanden ist
+    if (p.Eintritt && p.Eintritt.includes('.')) {
       const parts = p.Eintritt.split('.');
-      const jahre = stichtagJahr - parseInt(parts[2]);
+      const eintrittsJahr = parseInt(parts[2]);
+      const jahre = stichtagJahr - eintrittsJahr;
+
       if (jubilaeen.includes(jahre)) {
         aktuelleJubilare.push({ ...p, jahre: jahre });
       }
     }
   });
 
-  // Sortierung: Höchste Jahre zuerst
+  // Sortierung: Älteste Dienstjahre zuerst
   aktuelleJubilare.sort((a, b) => b.jahre - a.jahre);
 
-  // 2. JUBILÄEN ANZEIGEN
+  // Jubilare anzeigen
   aktuelleJubilare.forEach(j => {
     list.innerHTML += `
       <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-2xl shadow-sm border-l-4 border-yellow-500 mb-3 ring-1 ring-yellow-200">
@@ -72,7 +75,7 @@ function renderDashboard() {
       </div>`;
   });
 
-  // 3. BEFÖRDERUNGEN (wie gehabt)
+  // Beförderungen anzeigen
   appData.personnel.forEach(p => {
     const promo = checkPromotionStatus(p);
     if (promo.isFällig) {
