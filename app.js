@@ -177,88 +177,84 @@ function showDetails(index) {
     const cleanPhone = p.Telefon ? p.Telefon.toString().replace(/\s+/g, '') : '';
     const lehrgangsListe = ["Probezeit", "Grundausbildung", "Truppführer", "Gruppenführer", "Zugführer", "Verbandsführer 1", "Verbandsführer 2"];
 
+    // WICHTIG: Hier beginnt der String mit ` und endet erst GANZ UNTEN vor dem Semikolon!
     content.innerHTML = `
-        <div class="mb-6">
-            <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname} ${p.PersNr ? `<span class="text-slate-400 font-medium">(${p.PersNr})</span>` : ''}</h2>
-            <p class="text-red-700 font-bold">${p.Abteilung} • ${p.Dienstgrad}</p>
+    <div class="mb-6">
+        <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname} ${p.PersNr ? `<span class="text-slate-400 font-medium">(${p.PersNr})</span>` : ''}</h2>
+        <p class="text-red-700 font-bold">${p.Abteilung} • ${p.Dienstgrad}</p>
+    </div>
+    
+    <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+        <div class="grid grid-cols-2 gap-3">
+            <a href="tel:${cleanPhone}" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-slate-100 dark:bg-slate-700 p-4 rounded-2xl font-bold gap-2 active:scale-95 transition">📞 Anrufen</a>
+            <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold gap-2 active:scale-95 transition">💬 WhatsApp</a>
         </div>
-                <div class="bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-lg text-center">
-                    <p class="text-[10px] uppercase font-bold text-slate-500">Pers.Nr.</p>
-                    <p class="text-sm font-black text-slate-800 dark:text-white">${p.PersNr || '---'}</p>
+
+        <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+            <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Anschrift</p>
+            <div class="flex justify-between items-center">
+                <p class="text-xs font-medium leading-relaxed">${p.Adresse || 'Keine Adresse hinterlegt'}</p>
+                ${p.Adresse ? `
+                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.Adresse)}" target="_blank" class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-xl active:scale-90 transition">
+                        📍 Karte
+                    </a>` : ''}
+            </div>
+        </div>
+
+        <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-100 dark:bg-green-900/20 border-l-4 border-green-500' : 'bg-slate-100 dark:bg-slate-700/50 border-l-4 border-slate-400'}">
+            <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Status Beförderung</p>
+            <p class="text-sm font-bold mt-1">Ziel: <span class="text-red-700">${promo.nextDG || 'Aktuell Endstufe'}</span></p>
+            ${promo.isFällig ? '<p class="text-green-600 text-[10px] font-bold mt-2">✓ Zeit & Lehrgang erfüllt</p>' : (promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2 animate-pulse">⚠ ${promo.missing.join(', ')}</p>` : '')}
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+            <div class="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                <p class="text-[10px] uppercase font-bold text-slate-400">Transponder</p>
+                <p class="text-xs font-mono font-bold">${p.Transponder || '---'}</p>
+            </div>
+            <div class="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                <p class="text-[10px] uppercase font-bold text-slate-400">DME-Nr.</p>
+                <p class="text-xs font-mono font-bold">${p.DME || '---'}</p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+            <p class="text-[10px] uppercase font-bold text-slate-400 mb-3 tracking-widest">Ausbildungsstand</p>
+            <div class="grid grid-cols-1 gap-2">
+                ${lehrgangsListe.map(lg => {
+                    const hat = (p[lg] !== undefined && p[lg] !== null && p[lg] !== "");
+                    return `<div class="flex items-center justify-between text-xs py-1 border-b border-slate-50 dark:border-slate-700 last:border-0">
+                        <span class="${hat ? 'font-bold text-slate-800 dark:text-white' : 'text-slate-300 dark:text-slate-600'}">${lg}</span>
+                        <span>${hat ? '✅' : '🟣'}</span>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl">
+            <div class="space-y-2">
+                <div>
+                    <p class="text-slate-400 uppercase font-bold">Geburtstag</p>
+                    <p class="font-medium">${AppUtils.formatDate(p.Geburtstag)}</p>
+                </div>
+                <div>
+                    <p class="text-slate-400 uppercase font-bold">Eintritt</p>
+                    <p class="font-medium">${AppUtils.formatDate(p.Eintritt)}</p>
+                </div>
+            </div>
+            <div class="flex flex-col justify-between ${dz.isJubilaeum ? 'ring-2 ring-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 rounded p-1' : ''}">
+                <div>
+                    <p class="text-slate-400 uppercase font-bold">Letzte Beförderung</p>
+                    <p class="font-medium">${AppUtils.formatDate(p.Letzte_Befoerderung)}</p>
+                </div>
+                <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                    <p class="text-slate-400 uppercase font-bold">Dienstzeit ${dz.isJubilaeum ? '🎖️' : ''}</p>
+                    <p class="font-black text-red-700 text-sm">${dz.text}</p>
                 </div>
             </div>
         </div>
-        
-        <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-            <div class="grid grid-cols-2 gap-3">
-                <a href="tel:${cleanPhone}" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-slate-100 dark:bg-slate-700 p-4 rounded-2xl font-bold gap-2 active:scale-95 transition">📞 Anrufen</a>
-                <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold gap-2 active:scale-95 transition">💬 WhatsApp</a>
-            </div>
+    </div>`;
 
-            <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
-                <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Anschrift</p>
-                <div class="flex justify-between items-center">
-                    <p class="text-xs font-medium leading-relaxed">${p.Adresse || 'Keine Adresse hinterlegt'}</p>
-                    ${p.Adresse ? `
-                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.Adresse)}" target="_blank" class="bg-blue-50 text-blue-600 p-2 rounded-xl active:scale-90 transition">
-                            📍 Karte
-                        </a>` : ''}
-                </div>
-            </div>
-
-            <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-100 dark:bg-green-900/20 border-l-4 border-green-500' : 'bg-slate-100 dark:bg-slate-700/50 border-l-4 border-slate-400'}">
-                <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Status Beförderung</p>
-                <p class="text-sm font-bold mt-1">Ziel: <span class="text-red-700">${promo.nextDG || 'Aktuell Endstufe'}</span></p>
-                ${promo.isFällig ? '<p class="text-green-600 text-[10px] font-bold mt-2">✓ Zeit & Lehrgang erfüllt</p>' : (promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2 animate-pulse">⚠ ${promo.missing.join(', ')}</p>` : '')}
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div class="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                    <p class="text-[10px] uppercase font-bold text-slate-400">Transponder</p>
-                    <p class="text-xs font-mono font-bold">${p.Transponder || '---'}</p>
-                </div>
-                <div class="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                    <p class="text-[10px] uppercase font-bold text-slate-400">DME-Nr.</p>
-                    <p class="text-xs font-mono font-bold">${p.DME || '---'}</p>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
-                <p class="text-[10px] uppercase font-bold text-slate-400 mb-3 tracking-widest">Ausbildungsstand</p>
-                <div class="grid grid-cols-1 gap-2">
-                    ${lehrgangsListe.map(lg => {
-                        const hat = (p[lg] !== undefined && p[lg] !== null && p[lg] !== "");
-                        return `<div class="flex items-center justify-between text-xs py-1 border-b border-slate-50 dark:border-slate-700 last:border-0">
-                            <span class="${hat ? 'font-bold text-slate-800 dark:text-white' : 'text-slate-300 dark:text-slate-600'}">${lg}</span>
-                            <span>${hat ? '✅' : '🟣'}</span>
-                        </div>`;
-                    }).join('')}
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl">
-                <div class="space-y-2">
-                    <div>
-                        <p class="text-slate-400 uppercase font-bold">Geburtstag</p>
-                        <p class="font-medium">${AppUtils.formatDate(p.Geburtstag)}</p>
-                    </div>
-                    <div>
-                        <p class="text-slate-400 uppercase font-bold">Eintritt</p>
-                        <p class="font-medium">${AppUtils.formatDate(p.Eintritt)}</p>
-                    </div>
-                </div>
-                <div class="flex flex-col justify-between ${dz.isJubilaeum ? 'ring-2 ring-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 rounded p-1' : ''}">
-                    <div>
-                        <p class="text-slate-400 uppercase font-bold">Letzte Beförderung</p>
-                        <p class="font-medium">${AppUtils.formatDate(p.Letzte_Befoerderung)}</p>
-                    </div>
-                    <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                        <p class="text-slate-400 uppercase font-bold">Dienstzeit ${dz.isJubilaeum ? '🎖️' : ''}</p>
-                        <p class="font-black text-red-700 text-sm">${dz.text}</p>
-                    </div>
-                </div>
-            </div>
-        </div>`;
     document.getElementById('member-modal').classList.remove('hidden');
 }
 
