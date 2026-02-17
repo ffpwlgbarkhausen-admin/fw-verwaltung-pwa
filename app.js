@@ -179,11 +179,9 @@ function showDetails(index) {
 
     content.innerHTML = `
         <div class="mb-6">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname} ${p.PersNr ? `<span class="text-slate-400 font-medium">(${p.PersNr})</span>` : ''}</h2>
+            <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname} ${p.PersNr ? `<span class="text-slate-400 font-medium">(${p.PersNr})</span>` : ''}</h2>
             <p class="text-red-700 font-bold">${p.Abteilung} • ${p.Dienstgrad}</p>
-                </div>
+        </div>
                 <div class="bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-lg text-center">
                     <p class="text-[10px] uppercase font-bold text-slate-500">Pers.Nr.</p>
                     <p class="text-sm font-black text-slate-800 dark:text-white">${p.PersNr || '---'}</p>
