@@ -55,11 +55,16 @@ function renderDashboard() {
 
 function renderPersonal() {
   const list = document.getElementById('member-list');
-  appData.personnel.sort((a,b) => a.Name.localeCompare(b.Name)).forEach(p => {
+  list.innerHTML = ""; // Wichtig: Liste vorher leeren
+  
+  appData.personnel.sort((a,b) => a.Name.localeCompare(b.Name)).forEach((p, index) => {
     list.innerHTML += `
-      <div class="member-item bg-white dark:bg-slate-800 p-4 rounded-xl flex justify-between items-center shadow-sm">
-        <div><p class="font-bold text-sm">${p.Name}, ${p.Vorname}</p><p class="text-[10px] text-slate-400">${p.Dienstgrad}</p></div>
-        <span class="text-xs opacity-30 italic">Details ➔</span>
+      <div onclick="showDetails(${index})" class="member-item bg-white dark:bg-slate-800 p-4 rounded-xl flex justify-between items-center shadow-sm cursor-pointer active:scale-95 transition-transform">
+        <div>
+          <p class="font-bold text-sm text-slate-800 dark:text-white">${p.Name}, ${p.Vorname}</p>
+          <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">${p.Dienstgrad}</p>
+        </div>
+        <span class="text-red-700 opacity-50">➔</span>
       </div>`;
   });
 }
@@ -69,6 +74,47 @@ function filterPersonal() {
   document.querySelectorAll('.member-item').forEach(i => {
     i.style.display = i.innerText.toLowerCase().includes(s) ? 'flex' : 'none';
   });
+}
+
+function showDetails(index) {
+  const p = appData.personnel[index];
+  const content = document.getElementById('modal-content');
+  
+  content.innerHTML = `
+    <div class="flex items-center gap-4 mb-6">
+      <div class="h-16 w-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center text-red-700 text-2xl font-black">
+        ${p.Name[0]}
+      </div>
+      <div>
+        <h2 class="text-xl font-black">${p.Name}, ${p.Vorname}</h2>
+        <p class="text-red-700 font-bold text-sm">${p.Dienstgrad}</p>
+      </div>
+    </div>
+    
+    <div class="space-y-4 max-h-[60vh] overflow-y-auto">
+      <div class="border-b border-slate-100 dark:border-slate-700 pb-2">
+        <p class="text-[10px] text-slate-400 uppercase font-bold">Lehrgänge</p>
+        <p class="text-sm mt-1">${p.Lehrgaenge || 'Keine Lehrgänge eingetragen'}</p>
+      </div>
+      
+      <div class="border-b border-slate-100 dark:border-slate-700 pb-2">
+        <p class="text-[10px] text-slate-400 uppercase font-bold">Letzte Beförderung</p>
+        <p class="text-sm mt-1">${p.Letzte_Befoerderung || 'N/A'}</p>
+      </div>
+
+      <div class="pt-2">
+        <a href="tel:${p.Telefon}" class="flex items-center justify-center bg-red-700 text-white p-4 rounded-2xl font-bold shadow-lg shadow-red-700/30">
+          📞 Anrufen
+        </a>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('member-modal').classList.remove('hidden');
+}
+
+function closeDetails() {
+  document.getElementById('member-modal').classList.add('hidden');
 }
 
 function toggleDarkMode() {
