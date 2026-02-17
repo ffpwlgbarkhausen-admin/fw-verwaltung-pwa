@@ -38,19 +38,46 @@ function showView(name) {
 
 function renderDashboard() {
   const stichtagElement = document.getElementById('stichtag-display');
+  // Nutzt das Datum aus dem Sheet
   if(stichtagElement) stichtagElement.innerText = new Date(appData.stichtag).toLocaleDateString('de-DE');
   
   const list = document.getElementById('promo-list');
   if(!list) return;
   list.innerHTML = "";
 
+  const jubilaeen = [25, 35, 40, 50, 60, 70, 75, 80];
+  const stichtagJahr = new Date(appData.stichtag).getFullYear();
+
+  // Zuerst Jubiläen anzeigen
+  appData.personnel.forEach(p => {
+    if (p.Eintritt) {
+      const parts = p.Eintritt.split('.');
+      const eintrittsJahr = parseInt(parts[2]);
+      const jahre = stichtagJahr - eintrittsJahr;
+
+      if (jubilaeen.includes(jahre)) {
+        list.innerHTML += `
+          <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-2xl shadow-sm border-l-4 border-yellow-500 mb-3 ring-1 ring-yellow-200">
+            <div class="flex justify-between items-start">
+              <div>
+                <h4 class="font-bold text-slate-800 dark:text-white">🎖️ ${jahre} J. Jubiläum</h4>
+                <p class="text-sm text-yellow-700 font-bold">${p.Name}, ${p.Vorname}</p>
+              </div>
+              <span class="text-[10px] bg-yellow-500 text-white px-2 py-1 rounded-full uppercase font-black">${stichtagJahr}</span>
+            </div>
+          </div>`;
+      }
+    }
+  });
+
+  // Danach Beförderungen (bestehender Code)
   appData.personnel.forEach(p => {
     const promo = checkPromotionStatus(p);
     if (promo.isFällig) {
       list.innerHTML += `
-        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border-l-4 border-orange-500">
-          <h4 class="font-bold">${p.Name}, ${p.Vorname}</h4>
-          <p class="text-xs text-slate-500">${p.Dienstgrad} ➔ <span class="text-orange-600 font-bold">${promo.nextDG}</span></p>
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border-l-4 border-orange-500 mb-2">
+          <h4 class="font-bold text-sm">${p.Name}, ${p.Vorname}</h4>
+          <p class="text-[10px] text-slate-500">${p.Dienstgrad} ➔ <span class="text-orange-600 font-bold">${promo.nextDG}</span></p>
         </div>`;
     }
   });
