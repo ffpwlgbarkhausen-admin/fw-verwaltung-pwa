@@ -192,39 +192,40 @@ function showDetails(index) {
     try {
       let eintrittDate;
       
-      // FLEXIBLE DATUMSERKENNUNG:
-      if (typeof eintrittStr === 'string' && eintrittStr.includes('.')) {
-        // Fall: 18.04.2002
+      // 1. Prüfung: Ist es bereits ein gültiges Datumsobjekt oder ISO-String?
+      eintrittDate = new Date(eintrittStr);
+
+      // 2. Prüfung: Falls Fall 1 fehlschlägt (z.B. bei deutschem Punkt-Format)
+      if (isNaN(eintrittDate.getTime()) && typeof eintrittStr === 'string' && eintrittStr.includes('.')) {
         const parts = eintrittStr.split('.');
+        // Erstellt Datum aus TT.MM.JJJJ
         eintrittDate = new Date(parts[2], parts[1] - 1, parts[0]);
-      } else {
-        // Fall: ISO-String (2002-04-18) oder Date-Objekt
-        eintrittDate = new Date(eintrittStr);
       }
 
-      // Prüfen, ob das Datum gültig ist
-      if (isNaN(eintrittDate.getTime())) return { text: 'Format?', isJubilaeum: false };
+      // 3. Letzter Rettungsanker: Falls immer noch ungültig
+      if (isNaN(eintrittDate.getTime())) {
+        console.error("Ungültiges Datum empfangen:", eintrittStr);
+        return { text: 'Format?', isJubilaeum: false };
+      }
 
-      // Stichtag verwenden (Fallback auf heute, falls appData.stichtag fehlt)
+      // Berechnung gegen den Stichtag
       const stichtagDate = appData.stichtag ? new Date(appData.stichtag) : new Date();
       
       let jahre = stichtagDate.getFullYear() - eintrittDate.getFullYear();
       const m = stichtagDate.getMonth() - eintrittDate.getMonth();
       
-      // Korrektur, falls der Jahrestag im aktuellen Jahr noch nicht erreicht wurde
       if (m < 0 || (m === 0 && stichtagDate.getDate() < eintrittDate.getDate())) {
         jahre--;
       }
 
-      const jubilaeen = [25, 35, 40, 50, 60, 70, 75, 80];
       const jahreAnzeige = jahre >= 0 ? jahre : 0;
+      const jubilaeen = [25, 35, 40, 50, 60, 70, 75, 80];
       
       return { 
         text: jahreAnzeige + " J.", 
         isJubilaeum: jubilaeen.includes(jahreAnzeige) 
       };
     } catch (e) { 
-      console.error("Fehler bei DZ-Berechnung:", e);
       return { text: 'Fehler', isJubilaeum: false }; 
     }
   };
