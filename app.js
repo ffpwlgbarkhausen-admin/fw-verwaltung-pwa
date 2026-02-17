@@ -185,19 +185,43 @@ function showDetails(index) {
     return raw;
   };
 
-  const getDienstzeitInfo = (eintrittStr) => {
-    if (!eintrittStr || eintrittStr === '-') return { text: '-', isJubilaeum: false };
-    try {
-      const parts = eintrittStr.split('.');
-      const eintrittDate = new Date(parts[2], parts[1] - 1, parts[0]);
-      const stichtagDate = new Date(appData.stichtag);
-      const jahre = Math.floor((stichtagDate - eintrittDate) / (1000 * 60 * 60 * 24 * 365.25));
-      const jubilaeen = [25, 35, 40, 50, 60, 70, 75, 80];
-      return { text: (jahre >= 0 ? jahre : 0) + " J.", isJubilaeum: jubilaeen.includes(jahre) };
-    } catch (e) { return { text: "-", isJubilaeum: false }; }
-  };
+  // ANALYSE: Wir stellen sicher, dass p.Eintritt wirklich existiert
+const dz = getDienstzeitInfo(p.Eintritt);
 
-  const dz = getDienstzeitInfo(p.Eintritt);
+// Ersetze die getDienstzeitInfo Funktion durch diese robustere Version:
+function getDienstzeitInfo(eintrittStr) {
+  // Falls das Feld leer ist oder nicht existiert
+  if (!eintrittStr || eintrittStr === '-') return { text: '-', isJubilaeum: false };
+  
+  try {
+    // 1. Zerlege "01.08.2015" in [01, 08, 2015]
+    const parts = eintrittStr.split('.');
+    if (parts.length < 3) return { text: '-', isJubilaeum: false };
+    
+    // 2. Erstelle Datumsobjekte (Monat ist 0-basiert, daher -1)
+    const eintrittDate = new Date(parts[2], parts[1] - 1, parts[0]);
+    // Nutze den Stichtag aus dem Sheet für die Berechnung
+    const stichtagDate = new Date(appData.stichtag);
+    
+    // 3. Berechnung der Differenz in Jahren
+    let jahre = stichtagDate.getFullYear() - eintrittDate.getFullYear();
+    
+    // Check, ob der Jahrestag im aktuellen Jahr schon erreicht wurde
+    const m = stichtagDate.getMonth() - eintrittDate.getMonth();
+    if (m < 0 || (m === 0 && stichtagDate.getDate() < eintrittDate.getDate())) {
+      jahre--;
+    }
+
+    const jubilaeen = [25, 35, 40, 50, 60, 70, 75, 80];
+    return { 
+      text: (jahre >= 0 ? jahre : 0) + " J.", 
+      isJubilaeum: jubilaeen.includes(jahre) 
+    };
+  } catch (e) { 
+    console.error("Fehler bei Dienstzeit:", e);
+    return { text: "Fehler", isJubilaeum: false }; 
+  }
+}
   const lehrgangsListe = ["Probezeit", "Grundausbildung", "Truppführer", "Gruppenführer", "Zugführer", "Verbandsführer 1", "Verbandsführer 2"];
 
   // --- HTML INHALT ---
