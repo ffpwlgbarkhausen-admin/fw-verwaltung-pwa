@@ -177,7 +177,7 @@ function showDetails(index) {
           <p class="text-xs font-medium">${p.Adresse || 'Keine Adresse hinterlegt'}</p>
         </div>
         ${p.Adresse ? `
-          <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.Adresse)}" 
+          <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.Adresse)}"  
              target="_blank" 
              class="ml-4 bg-blue-50 text-blue-600 p-3 rounded-xl active:scale-90 transition-all shadow-inner">
              📍
