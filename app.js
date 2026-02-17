@@ -216,7 +216,15 @@ function showDetails(index) {
       return { text: "Fehler", isJubilaeum: false }; 
     }
   };
+  // ANALYSE: Wir schauen uns an, was wirklich im Datensatz steckt
+console.log("Verfügbare Felder für " + p.Name + ":", Object.keys(p));
+console.log("Inhalt Eintritt-Feld:", p.Eintritt);
 
+// Wir versuchen den Wert zu finden, auch wenn der Spaltenname 
+// minimale Abweichungen hätte (Groß/Kleinschreibung)
+const tatsaechlicherEintritt = p.Eintritt || p.eintritt || p["Eintritt "] || null;
+
+const dz = getDienstzeitInfo(tatsaechlicherEintritt);
   // Berechnung ausführen
   const dz = getDienstzeitInfo(p.Eintritt);
   const lehrgangsListe = ["Probezeit", "Grundausbildung", "Truppführer", "Gruppenführer", "Zugführer", "Verbandsführer 1", "Verbandsführer 2"];
