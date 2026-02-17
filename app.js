@@ -1,7 +1,7 @@
 // ANALYSE: Ersetze diesen Link durch deine Web-App URL aus Google Apps Script
 const API_URL = "https://script.google.com/macros/s/AKfycbxA8lHhtAXoGKTCkN1s4thQH-qWQYeNS3QkySUDpB-2_3mrAuy2cuuWBy4UjR4xpjeR/exec"; 
 
-let appData = {};
+let appData = {}; 
 
 document.addEventListener('DOMContentLoaded', () => {
   if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
