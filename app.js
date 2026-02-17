@@ -131,19 +131,18 @@ function renderPersonal() {
             </p>
         </div>`;
 
-    // Wir speichern den Original-Index, damit die Suche immer funktioniert
     appData.personnel
-        .map((p, originalIndex) => ({ ...p, originalIndex }))
+        .map((p, originalIndex) => ({ ...p, originalIndex })) // Merkt sich die echte ID
         .sort((a, b) => a.Name.localeCompare(b.Name))
         .forEach((p) => {
             const promo = checkPromotionStatus(p);
             list.innerHTML += `
-                <div data-index="${p.originalIndex}" class="member-item bg-white dark:bg-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-sm mb-2 border-l-4 ${promo.isFällig ? 'border-orange-500 bg-orange-50/20' : 'border-transparent'} active:scale-95 transition-all">
-                    <div class="flex-1" onclick="showDetails(${p.originalIndex})">
+                <div data-index="${p.originalIndex}" onclick="showDetails(${p.originalIndex})" class="member-item bg-white dark:bg-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-sm mb-2 border-l-4 ${promo.isFällig ? 'border-orange-500 bg-orange-50/20' : 'border-transparent'} active:scale-95 transition-all cursor-pointer">
+                    <div class="flex-1">
                         <p class="font-bold text-sm text-slate-800 dark:text-white">${p.Name}, ${p.Vorname} ${p.PersNr ? `(${p.PersNr})` : ''} ${promo.isFällig ? '⭐' : ''}</p>
                         <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">${p.Abteilung} | ${p.Dienstgrad}</p>
                     </div>
-                    <span class="text-red-700 text-lg opacity-30" onclick="showDetails(${p.originalIndex})">➔</span>
+                    <span class="text-red-700 text-lg opacity-30">➔</span>
                 </div>`;
         });
 }
@@ -197,10 +196,7 @@ function showDetails(index) {
             <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Anschrift</p>
             <div class="flex justify-between items-center">
                 <p class="text-xs font-medium leading-relaxed">${p.Adresse || 'Keine Adresse hinterlegt'}</p>
-                ${p.Adresse ? `
-                    <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.Adresse)}" target="_blank" class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-xl active:scale-90 transition">
-                        📍 Karte
-                    </a>` : ''}
+                ${p.Adresse ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.Adresse)}" target="_blank" class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-xl active:scale-90 transition">📍 Karte</a>` : ''}
             </div>
         </div>
 
@@ -265,10 +261,10 @@ function filterPersonal() {
     const items = document.querySelectorAll('.member-item');
 
     items.forEach(item => {
-        const index = item.getAttribute('data-index');
-        const p = appData.personnel[index];
+        const idx = item.getAttribute('data-index');
+        const p = appData.personnel[idx];
         
-        // Wir durchsuchen alle relevanten Felder im Hintergrund
+        // Such-Pool aus allen wichtigen Feldern erstellen
         const searchPool = [
             p.Name, p.Vorname, p.PersNr, p.Abteilung, 
             p.Dienstgrad, p.Transponder, p.DME
@@ -277,7 +273,6 @@ function filterPersonal() {
         item.style.display = searchPool.includes(searchTerm) ? 'flex' : 'none';
     });
 }
-
 function closeDetails() { document.getElementById('member-modal').classList.add('hidden'); }
 
 function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
