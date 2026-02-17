@@ -72,9 +72,31 @@ function renderPersonal() {
     </div>
     <div class="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 overflow-hidden">
       <p class="text-[10px] uppercase text-slate-400 font-bold">Abteilungen</p>
-      <p class="text-[10px] truncate">${Object.entries(abteilungen).map(([n, v]) => `${n}: ${v}`).join(' | ')}</p>
+      <p class="text-[10px] truncate font-medium text-slate-600 dark:text-slate-300">
+        ${Object.entries(abteilungen).map(([n, v]) => `${n}: ${v}`).join(' | ')}
+      </p>
     </div>
   `;
+
+  // Liste rendern
+  appData.personnel.sort((a,b) => a.Name.localeCompare(b.Name)).forEach((p, index) => {
+    const promo = checkPromotionStatus(p);
+
+    list.innerHTML += `
+      <div onclick="showDetails(${index})" class="member-item bg-white dark:bg-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-sm mb-2 border-l-4 ${promo.isFällig ? 'border-orange-500 bg-orange-50/20' : 'border-transparent'} active:scale-95 transition-all">
+        <div class="flex-1">
+          <div class="flex items-center gap-2">
+            <p class="font-bold text-sm text-slate-800 dark:text-white">${p.Name}, ${p.Vorname}</p>
+            ${promo.isFällig ? '<span class="text-orange-500 text-xs" title="Beförderung fällig">⭐</span>' : ''}
+          </div>
+          <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">${p.Abteilung} | ${p.Dienstgrad}</p>
+        </div>
+        <div class="text-right">
+           <span class="text-red-700 text-lg opacity-30 font-black">➔</span>
+        </div>
+      </div>`;
+  });
+}
   // Hilfsfunktion zur Beförderungsprüfung
 function checkPromotionStatus(p) {
   const rules = appData.promoRules.filter(r => r.Vorheriger_DG === p.Dienstgrad);
