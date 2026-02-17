@@ -185,7 +185,7 @@ function showDetails(index) {
       </div>
 
       <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl">
-        <div><p class="text-slate-400 uppercase font-bold">Geburtstag</p><p class="font-medium">${p.Geburtsdatum || '-'}</p></div>
+        <div><p class="text-slate-400 uppercase font-bold">Geburtstag</p><p class="font-medium">${p.Geburtstag || '-'}</p></div>
         <div><p class="text-slate-400 uppercase font-bold">Letzte Bef.</p><p class="font-medium">${p.Letzte_Befoerderung || '-'}</p></div>
       </div>
     </div>`;
