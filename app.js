@@ -131,17 +131,21 @@ function renderPersonal() {
             </p>
         </div>`;
 
-    appData.personnel.sort((a,b) => a.Name.localeCompare(b.Name)).forEach((p, index) => {
-        const promo = checkPromotionStatus(p);
-        list.innerHTML += `
-            <div onclick="showDetails(${index})" class="member-item bg-white dark:bg-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-sm mb-2 border-l-4 ${promo.isFällig ? 'border-orange-500 bg-orange-50/20' : 'border-transparent'} active:scale-95 transition-all">
-                <div class="flex-1">
-                    <p class="font-bold text-sm text-slate-800 dark:text-white">${p.Name}, ${p.Vorname} ${p.PersNr ? `(${p.PersNr})` : ''} ${promo.isFällig ? '⭐' : ''}</p>
-                    <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">${p.Abteilung} | ${p.Dienstgrad}</p>
-                </div>
-                <span class="text-red-700 text-lg opacity-30">➔</span>
-            </div>`;
-    });
+    // Wir speichern den Original-Index, damit die Suche immer funktioniert
+    appData.personnel
+        .map((p, originalIndex) => ({ ...p, originalIndex }))
+        .sort((a, b) => a.Name.localeCompare(b.Name))
+        .forEach((p) => {
+            const promo = checkPromotionStatus(p);
+            list.innerHTML += `
+                <div data-index="${p.originalIndex}" class="member-item bg-white dark:bg-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-sm mb-2 border-l-4 ${promo.isFällig ? 'border-orange-500 bg-orange-50/20' : 'border-transparent'} active:scale-95 transition-all">
+                    <div class="flex-1" onclick="showDetails(${p.originalIndex})">
+                        <p class="font-bold text-sm text-slate-800 dark:text-white">${p.Name}, ${p.Vorname} ${p.PersNr ? `(${p.PersNr})` : ''} ${promo.isFällig ? '⭐' : ''}</p>
+                        <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">${p.Abteilung} | ${p.Dienstgrad}</p>
+                    </div>
+                    <span class="text-red-700 text-lg opacity-30" onclick="showDetails(${p.originalIndex})">➔</span>
+                </div>`;
+        });
 }
 
 function checkPromotionStatus(p) {
@@ -177,7 +181,6 @@ function showDetails(index) {
     const cleanPhone = p.Telefon ? p.Telefon.toString().replace(/\s+/g, '') : '';
     const lehrgangsListe = ["Probezeit", "Grundausbildung", "Truppführer", "Gruppenführer", "Zugführer", "Verbandsführer 1", "Verbandsführer 2"];
 
-    // WICHTIG: Hier beginnt der String mit ` und endet erst GANZ UNTEN vor dem Semikolon!
     content.innerHTML = `
     <div class="mb-6">
         <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname} ${p.PersNr ? `<span class="text-slate-400 font-medium">(${p.PersNr})</span>` : ''}</h2>
@@ -218,19 +221,6 @@ function showDetails(index) {
             </div>
         </div>
 
-        <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
-            <p class="text-[10px] uppercase font-bold text-slate-400 mb-3 tracking-widest">Ausbildungsstand</p>
-            <div class="grid grid-cols-1 gap-2">
-                ${lehrgangsListe.map(lg => {
-                    const hat = (p[lg] !== undefined && p[lg] !== null && p[lg] !== "");
-                    return `<div class="flex items-center justify-between text-xs py-1 border-b border-slate-50 dark:border-slate-700 last:border-0">
-                        <span class="${hat ? 'font-bold text-slate-800 dark:text-white' : 'text-slate-300 dark:text-slate-600'}">${lg}</span>
-                        <span>${hat ? '✅' : '🟣'}</span>
-                    </div>`;
-                }).join('')}
-            </div>
-        </div>
-
         <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl">
             <div class="space-y-2">
                 <div>
@@ -253,14 +243,41 @@ function showDetails(index) {
                 </div>
             </div>
         </div>
+
+        <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+            <p class="text-[10px] uppercase font-bold text-slate-400 mb-3 tracking-widest">Ausbildungsstand</p>
+            <div class="grid grid-cols-1 gap-2">
+                ${lehrgangsListe.map(lg => {
+                    const hat = (p[lg] !== undefined && p[lg] !== null && p[lg] !== "");
+                    return `<div class="flex items-center justify-between text-xs py-1 border-b border-slate-50 dark:border-slate-700 last:border-0">
+                        <span class="${hat ? 'font-bold text-slate-800 dark:text-white' : 'text-slate-300 dark:text-slate-600'}">${lg}</span>
+                        <span>${hat ? '✅' : '🟣'}</span>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>
     </div>`;
 
     document.getElementById('member-modal').classList.remove('hidden');
 }
+function filterPersonal() {
+    const searchTerm = document.getElementById('search').value.toLowerCase();
+    const items = document.querySelectorAll('.member-item');
+
+    items.forEach(item => {
+        const index = item.getAttribute('data-index');
+        const p = appData.personnel[index];
+        
+        // Wir durchsuchen alle relevanten Felder im Hintergrund
+        const searchPool = [
+            p.Name, p.Vorname, p.PersNr, p.Abteilung, 
+            p.Dienstgrad, p.Transponder, p.DME
+        ].map(v => (v || "").toString().toLowerCase()).join(' ');
+
+        item.style.display = searchPool.includes(searchTerm) ? 'flex' : 'none';
+    });
+}
 
 function closeDetails() { document.getElementById('member-modal').classList.add('hidden'); }
-function filterPersonal() {
-    const s = document.getElementById('search').value.toLowerCase();
-    document.querySelectorAll('.member-item').forEach(i => { i.style.display = i.innerText.toLowerCase().includes(s) ? 'flex' : 'none'; });
-}
+
 function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
