@@ -83,31 +83,42 @@ function renderDashboard() {
     if(!list) return;
     list.innerHTML = "";
 
-    // Jubilare filtern (Nutzt jetzt die zentrale Logik!)
+    // Jubiläen (kurz & bündig)
     let jubilare = appData.personnel
         .map(p => ({ ...p, dz: AppUtils.getDienstzeit(p.Eintritt) }))
-        .filter(p => p.dz.isJubilaeum)
-        .sort((a, b) => b.dz.jahre - a.dz.jahre);
+        .filter(p => p.dz.isJubilaeum);
 
-    jubilare.forEach(j => {
-        list.innerHTML += `
-            <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-2xl border-l-4 border-yellow-500 mb-3 ring-1 ring-yellow-200">
-                <h4 class="font-bold text-slate-800 dark:text-white">🎖️ ${j.dz.jahre} J. Jubiläum</h4>
-                <p class="text-sm text-yellow-700 font-bold">${j.Name}, ${j.Vorname}</p>
+    if(jubilare.length > 0) {
+        list.innerHTML += `<h3 class="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest text-center">🎖️ Jubiläen</h3>`;
+        jubilare.forEach(j => {
+            list.innerHTML += `<div class="bg-yellow-50 dark:bg-yellow-900/10 p-3 rounded-xl border border-yellow-200 mb-3 text-center">
+                <p class="text-[10px] font-bold text-yellow-700">${j.dz.jahre} J. Dienstzeit: <span class="text-slate-800 dark:text-white">${j.Name}</span></p>
             </div>`;
-    });
+        });
+    }
 
-    // Beförderungen
-    appData.personnel.forEach(p => {
-        const promo = checkPromotionStatus(p);
-        if (promo.isFällig) {
+    // BEFÖRDERUNGEN VERANLASSEN (Zeit & Lehrgang erfüllt)
+    const bereit = appData.personnel
+        .map((p, idx) => ({ ...p, promo: checkPromotionStatus(p), originalIndex: idx }))
+        .filter(p => p.promo.isFällig);
+
+    list.innerHTML += `<h3 class="text-[10px] font-black uppercase text-slate-400 mb-3 mt-6 tracking-widest">📋 Beförderungen veranlassen</h3>`;
+
+    if(bereit.length > 0) {
+        bereit.forEach(p => {
             list.innerHTML += `
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border-l-4 border-orange-500 mb-2">
-                    <h4 class="font-bold text-sm text-slate-800 dark:text-white">${p.Name}, ${p.Vorname}</h4>
-                    <p class="text-[10px] text-slate-500">${p.Dienstgrad} ➔ <span class="text-orange-600 font-bold">${promo.nextDG}</span></p>
+                <div onclick="showDetails(${p.originalIndex})" class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border-l-4 border-green-500 mb-3 active:scale-95 transition-all cursor-pointer ring-1 ring-slate-200 dark:ring-slate-700">
+                    <p class="font-black text-sm dark:text-white">${p.Name}, ${p.Vorname}</p>
+                    <p class="text-xs mt-1">
+                        <span class="text-slate-400">${p.Dienstgrad}</span> 
+                        <span class="text-green-600 font-bold mx-1">➔</span> 
+                        <span class="text-green-600 font-black">Beförderung zum ${p.promo.nextDG}</span>
+                    </p>
                 </div>`;
-        }
-    });
+        });
+    } else {
+        list.innerHTML += `<p class="text-center text-xs text-slate-400 py-4 italic border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl">Keine fälligen Beförderungen zum Stichtag.</p>`;
+    }
 }
 
 function renderPersonal() {
@@ -139,8 +150,12 @@ function renderPersonal() {
             list.innerHTML += `
                 <div data-index="${p.originalIndex}" onclick="showDetails(${p.originalIndex})" class="member-item bg-white dark:bg-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-sm mb-2 border-l-4 ${promo.isFällig ? 'border-orange-500 bg-orange-50/20' : 'border-transparent'} active:scale-95 transition-all cursor-pointer">
                     <div class="flex-1">
-                        <p class="font-bold text-sm text-slate-800 dark:text-white">${p.Name}, ${p.Vorname} ${p.PersNr ? `(${p.PersNr})` : ''} ${promo.isFällig ? '⭐' : ''}</p>
-                        <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">${p.Abteilung} | ${p.Dienstgrad}</p>
+                        // Korrigierte Namenszeile in der renderPersonal Schleife:
+<p class="font-bold text-sm text-slate-800 dark:text-white">
+    ${p.Name}, ${p.Vorname} ${p.PersNr ? `(${p.PersNr})` : ''} 
+    ${promo.isFällig ? `<span class="ml-2 text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full shadow-sm">BEFÖRDERN</span>` : ''}
+</p>
+<p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">${p.Abteilung} | ${p.Dienstgrad}</p>
                     </div>
                     <span class="text-red-700 text-lg opacity-30">➔</span>
                 </div>`;
@@ -200,11 +215,15 @@ function showDetails(index) {
             </div>
         </div>
 
-        <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-100 dark:bg-green-900/20 border-l-4 border-green-500' : 'bg-slate-100 dark:bg-slate-700/50 border-l-4 border-slate-400'}">
-            <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Status Beförderung</p>
-            <p class="text-sm font-bold mt-1">Ziel: <span class="text-red-700">${promo.nextDG || 'Aktuell Endstufe'}</span></p>
-            ${promo.isFällig ? '<p class="text-green-600 text-[10px] font-bold mt-2">✓ Zeit & Lehrgang erfüllt</p>' : (promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2 animate-pulse">⚠ ${promo.missing.join(', ')}</p>` : '')}
-        </div>
+        <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-600 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-700/50 border-l-4 border-slate-400'}">
+    <p class="text-[10px] uppercase font-bold ${promo.isFällig ? 'text-green-100' : 'text-slate-500'} tracking-wider">Status Beförderung</p>
+    ${promo.isFällig 
+        ? `<p class="text-lg font-black mt-1">Beförderung zum ${promo.nextDG} veranlassen!</p>
+           <p class="text-[10px] opacity-90 mt-1">✓ Wartezeit und Lehrgang erfolgreich abgeschlossen.</p>`
+        : `<p class="text-sm font-bold mt-1">Nächstes Ziel: <span class="text-red-700">${promo.nextDG || 'Endstufe erreicht'}</span></p>
+           ${promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2">⚠ ${promo.missing.join(', ')}</p>` : ''}`
+    }
+</div>
 
         <div class="grid grid-cols-2 gap-2">
             <div class="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
