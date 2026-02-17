@@ -102,19 +102,37 @@ function checkPromotionStatus(p) {
   const rules = appData.promoRules.filter(r => r.Vorheriger_DG === p.Dienstgrad);
   let status = { isFällig: false, nextDG: "", missing: [] };
 
+  if (rules.length === 0) return status;
+
   rules.forEach(rule => {
-    const jahre = (new Date(appData.stichtag) - new Date(p.Letzte_Befoerderung)) / (1000 * 60 * 60 * 24 * 365.25);
-    const zeitOK = jahre >= rule.Wartezeit_Jahre;
-    const lehrgangOK = !rule.Notwendiger_Lehrgang || (p.Lehrgaenge && p.Lehrgaenge.includes(rule.Notwendiger_Lehrgang));
+    // 1. Zeitprüfung
+    const stichtag = new Date(appData.stichtag);
+    const letzteBef = new Date(p.Letzte_Befoerderung);
+    const jahre = (stichtag - letzteBef) / (1000 * 60 * 60 * 24 * 365.25);
+    const zeitOK = jahre >= parseFloat(rule.Wartezeit_Jahre);
+
+    // 2. Dynamische Lehrgangsprüfung in den Einzelspalten
+    const geforderterLehrgang = rule.Notwendiger_Lehrgang;
+    let lehrgangOK = true;
+
+    if (geforderterLehrgang && geforderterLehrgang !== "") {
+      // Wir schauen direkt in der Spalte nach, die so heißt wie der geforderte Lehrgang
+      // Beispiel: Wenn in der Regel "Truppführer" steht, prüfen wir p["Truppführer"]
+      const zertifikat = p[geforderterLehrgang];
+      
+      // Ein Lehrgang gilt als vorhanden, wenn die Spalte nicht leer ist
+      lehrgangOK = (zertifikat !== undefined && zertifikat !== null && zertifikat !== "");
+    }
 
     if (zeitOK && lehrgangOK) {
       status.isFällig = true;
       status.nextDG = rule.Ziel_DG_Kurz;
     } else if (zeitOK && !lehrgangOK) {
       status.nextDG = rule.Ziel_DG_Kurz;
-      status.missing.push(`Lehrgang: ${rule.Notwendiger_Lehrgang}`);
+      status.missing.push(`Lehrgang fehlt: ${geforderterLehrgang}`);
     }
   });
+  
   return status;
 }
 
