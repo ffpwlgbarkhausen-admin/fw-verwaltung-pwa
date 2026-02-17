@@ -141,7 +141,18 @@ function showDetails(index) {
   const promo = checkPromotionStatus(p); // Nutzt die neue Einzelspalten-Logik
   const content = document.getElementById('modal-content');
   const cleanPhone = p.Telefon ? p.Telefon.toString().replace(/\s+/g, '') : '';
-
+  // Hilfsfunktion zum Schönmachen des Datums (direkt oben in showDetails einfügen)
+  const formatDateClean = (dateStr) => {
+  if (!dateStr || dateStr === '-') return '-';
+  // Falls es ein ISO-String ist (2024-01-01T...), nimm nur das Datum
+  const raw = dateStr.split('T')[0]; 
+  // Falls es yyyy-mm-dd ist, mach dd.mm.yyyy draus
+  if (raw.includes('-') && raw.split('-')[0].length === 4) {
+    const [y, m, d] = raw.split('-');
+    return `${d}.${m}.${y}`;
+  }
+  return raw; // Ansonsten gib es zurück wie es ist (z.B. wenn es schon dd.mm.yyyy ist)
+};
   // Liste der zu prüfenden Lehrgangs-Spalten
   const lehrgangsListe = [
     "Probezeit", "Grundausbildung", "Truppführer", 
@@ -198,8 +209,14 @@ function showDetails(index) {
       </div>
 
       <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl">
-        <div><p class="text-slate-400 uppercase font-bold">Geburtstag</p><p class="font-medium">${p.Geburtstag || '-'}</p></div>
-        <div><p class="text-slate-400 uppercase font-bold">Letzte Bef.</p><p class="font-medium">${p.Letzte_Befoerderung || '-'}</p></div>
+        <div>
+  <p class="text-slate-400 uppercase font-bold">Geburtstag</p>
+  <p class="font-medium">${formatDateClean(p.Geburtstag)}</p>
+</div>
+<div>
+  <p class="text-slate-400 uppercase font-bold">Letzte Bef.</p>
+  <p class="font-medium">${formatDateClean(p.Letzte_Befoerderung)}</p>
+</div>
       </div>
     </div>`;
   
