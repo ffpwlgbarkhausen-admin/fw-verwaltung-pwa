@@ -49,5 +49,15 @@
   </nav>
 
   <script src="app.js"></script>
+  <div id="member-modal" class="hidden fixed inset-0 z-[60] bg-slate-900/90 backdrop-blur-sm flex items-end sm:items-center justify-center transition-all">
+  <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative">
+    <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-600 rounded-full mx-auto mb-6 sm:hidden"></div>
+    
+    <button onclick="closeDetails()" class="absolute top-4 right-4 text-slate-400 hover:text-red-700 p-2">✕</button>
+    
+    <div id="modal-content">
+      </div>
+  </div>
+</div>
 </body>
 </html>
