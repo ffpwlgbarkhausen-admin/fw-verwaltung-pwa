@@ -136,7 +136,7 @@ function renderPersonal() {
         list.innerHTML += `
             <div onclick="showDetails(${index})" class="member-item bg-white dark:bg-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-sm mb-2 border-l-4 ${promo.isFällig ? 'border-orange-500 bg-orange-50/20' : 'border-transparent'} active:scale-95 transition-all">
                 <div class="flex-1">
-                    <p class="font-bold text-sm text-slate-800 dark:text-white">${p.Name}, ${p.Vorname} ${promo.isFällig ? '⭐' : ''}</p>
+                    <p class="font-bold text-sm text-slate-800 dark:text-white">${p.Name}, ${p.Vorname} ${p.PersNr ? `(${p.PersNr})` : ''} ${promo.isFällig ? '⭐' : ''}</p>
                     <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">${p.Abteilung} | ${p.Dienstgrad}</p>
                 </div>
                 <span class="text-red-700 text-lg opacity-30">➔</span>
@@ -181,8 +181,8 @@ function showDetails(index) {
         <div class="mb-6">
             <div class="flex justify-between items-start">
                 <div>
-                    <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname}</h2>
-                    <p class="text-red-700 font-bold">${p.Abteilung} • ${p.Dienstgrad}</p>
+                    <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname} ${p.PersNr ? `<span class="text-slate-400 font-medium">(${p.PersNr})</span>` : ''}</h2>
+            <p class="text-red-700 font-bold">${p.Abteilung} • ${p.Dienstgrad}</p>
                 </div>
                 <div class="bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-lg text-center">
                     <p class="text-[10px] uppercase font-bold text-slate-500">Pers.Nr.</p>
