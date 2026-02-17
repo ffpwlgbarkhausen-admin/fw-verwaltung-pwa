@@ -174,10 +174,9 @@ function showDetails(index) {
   const content = document.getElementById('modal-content');
   const cleanPhone = p.Telefon ? p.Telefon.toString().replace(/\s+/g, '') : '';
 
-  // --- HILFSFUNKTIONEN ---
+  // --- HILFSFUNKTIONEN INNERHALB ---
   const formatDateClean = (dateStr) => {
     if (!dateStr || dateStr === '-') return '-';
-    // Falls ISO-Format (von Google), nur Datumsteil nehmen
     const raw = dateStr.split('T')[0]; 
     if (raw.includes('-') && raw.split('-')[0].length === 4) {
       const [y, m, d] = raw.split('-');
@@ -187,21 +186,18 @@ function showDetails(index) {
   };
 
   const getDienstzeitInfo = (eintrittStr) => {
+    // Falls das Feld im Sheet leer ist, wird hier "-" zurückgegeben
     if (!eintrittStr || eintrittStr === '-') return { text: '-', isJubilaeum: false };
     
     try {
-      // Zerlegt "dd.MM.yyyy"
       const parts = eintrittStr.split('.');
       if (parts.length < 3) return { text: '-', isJubilaeum: false };
       
       const eintrittDate = new Date(parts[2], parts[1] - 1, parts[0]);
-      // Nutzt das Datum aus deinem Config-Sheet (z.B. 30.5.2026)
       const stichtagDate = new Date(appData.stichtag);
       
       let jahre = stichtagDate.getFullYear() - eintrittDate.getFullYear();
       const m = stichtagDate.getMonth() - eintrittDate.getMonth();
-      
-      // Korrektur, falls der Jahrestag im Stichtags-Jahr noch nicht war
       if (m < 0 || (m === 0 && stichtagDate.getDate() < eintrittDate.getDate())) {
         jahre--;
       }
@@ -212,20 +208,11 @@ function showDetails(index) {
         isJubilaeum: jubilaeen.includes(jahre) 
       };
     } catch (e) { 
-      console.error("Fehler bei Dienstzeit für " + p.Name, e);
       return { text: "Fehler", isJubilaeum: false }; 
     }
   };
-  // ANALYSE: Wir schauen uns an, was wirklich im Datensatz steckt
-console.log("Verfügbare Felder für " + p.Name + ":", Object.keys(p));
-console.log("Inhalt Eintritt-Feld:", p.Eintritt);
 
-// Wir versuchen den Wert zu finden, auch wenn der Spaltenname 
-// minimale Abweichungen hätte (Groß/Kleinschreibung)
-const tatsaechlicherEintritt = p.Eintritt || p.eintritt || p["Eintritt "] || null;
-
-const dz = getDienstzeitInfo(tatsaechlicherEintritt);
-  // Berechnung ausführen
+  // NUR EINMAL DEKLARIEREN:
   const dz = getDienstzeitInfo(p.Eintritt);
   const lehrgangsListe = ["Probezeit", "Grundausbildung", "Truppführer", "Gruppenführer", "Zugführer", "Verbandsführer 1", "Verbandsführer 2"];
 
@@ -247,7 +234,7 @@ const dz = getDienstzeitInfo(tatsaechlicherEintritt);
           <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Anschrift</p>
           <p class="text-xs font-medium">${p.Adresse || 'Keine Adresse hinterlegt'}</p>
         </div>
-        ${p.Adresse ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.Adresse)}" target="_blank" class="ml-4 bg-blue-50 text-blue-600 p-3 rounded-xl">📍</a>` : ''}
+        ${p.Adresse ? `<a href="https://maps.google.com/?q=${encodeURIComponent(p.Adresse)}" target="_blank" class="ml-4 bg-blue-50 text-blue-600 p-3 rounded-xl">📍</a>` : ''}
       </div>
 
       <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-100 dark:bg-green-900/20 border-l-4 border-green-500' : 'bg-slate-100 dark:bg-slate-700/50 border-l-4 border-slate-400'}">
@@ -293,7 +280,6 @@ const dz = getDienstzeitInfo(tatsaechlicherEintritt);
 
   document.getElementById('member-modal').classList.remove('hidden');
 }
-
 function closeDetails() {
   document.getElementById('member-modal').classList.add('hidden');
 }
