@@ -1,5 +1,5 @@
 // ANALYSE: Ersetze diesen Link durch deine Web-App URL aus Google Apps Script
-const API_URL = "https://script.google.com/macros/s/AKfycbxA8lHhtAXoGKTCkN1s4thQH-qWQYeNS3QkySUDpB-2_3mrAuy2cuuWBy4UjR4xpjeR/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbw7V1qsZVVFF6a7QFX5Yi06T0hugJQ-SuWviI-8R3D6ddGvUxTW3Sqo-eaFVedN4C3-/exec"; 
 
 let appData = {}; 
 
