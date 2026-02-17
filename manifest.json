@@ -1,0 +1,15 @@
+{
+  "name": "FW LG13 PRO",
+  "short_name": "LG13 PRO",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#b91c1c",
+  "theme_color": "#b91c1c",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/785/785116.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
