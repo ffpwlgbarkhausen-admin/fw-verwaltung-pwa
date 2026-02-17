@@ -138,37 +138,58 @@ function checkPromotionStatus(p) {
 
 function showDetails(index) {
   const p = appData.personnel[index];
-  const promo = checkPromotionStatus(p);
+  const promo = checkPromotionStatus(p); // Nutzt die neue Einzelspalten-Logik
   const content = document.getElementById('modal-content');
   const cleanPhone = p.Telefon ? p.Telefon.toString().replace(/\s+/g, '') : '';
+
+  // Liste der zu prüfenden Lehrgangs-Spalten
+  const lehrgangsListe = [
+    "Probezeit", "Grundausbildung", "Truppführer", 
+    "Gruppenführer", "Zugführer", "Verbandsführer 1", "Verbandsführer 2"
+  ];
 
   content.innerHTML = `
     <div class="mb-6">
       <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname}</h2>
       <p class="text-red-700 font-bold">${p.Abteilung} • ${p.Dienstgrad}</p>
     </div>
-    <div class="space-y-4">
+    
+    <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
       <div class="grid grid-cols-2 gap-3">
         <a href="tel:${cleanPhone}" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-slate-100 dark:bg-slate-700 p-4 rounded-2xl font-bold gap-2 active:scale-95 transition-transform">📞 Anrufen</a>
         <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold gap-2 active:scale-95 transition-transform">💬 WhatsApp</a>
       </div>
+
       <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-100 dark:bg-green-900/20 border-l-4 border-green-500' : 'bg-slate-100 dark:bg-slate-700/50 border-l-4 border-slate-400'}">
-        <p class="text-[10px] uppercase font-bold text-slate-500">Beförderungs-Check</p>
-        <p class="text-sm font-bold mt-1 italic">Ziel: ${promo.nextDG || 'Kein Ziel definiert'}</p>
-        ${promo.isFällig ? '<p class="text-green-600 text-xs font-bold mt-1 italic">✓ Kriterien erfüllt!</p>' : ''}
-        ${promo.missing.length > 0 ? `<p class="text-red-600 text-xs font-bold mt-1">⚠ Es fehlt: ${promo.missing.join(', ')}</p>` : ''}
+        <p class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Status Beförderung</p>
+        <p class="text-sm font-bold mt-1">Ziel: <span class="text-red-700">${promo.nextDG || 'Aktuell Endstufe'}</span></p>
+        ${promo.isFällig ? 
+          '<p class="text-green-600 text-[10px] font-bold mt-2">✓ Zeit & Lehrgang erfüllt</p>' : 
+          (promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2 animate-pulse">⚠ ${promo.missing.join(', ')}</p>` : '')
+        }
       </div>
-      <div class="grid grid-cols-2 gap-4 text-xs">
-        <div><p class="text-slate-400 uppercase font-bold text-[9px]">Geburtsdatum</p><p>${p.Geburtsdatum || '-'}</p></div>
-        <div><p class="text-slate-400 uppercase font-bold text-[9px]">Letzte Bef.</p><p>${p.Letzte_Befoerderung || '-'}</p></div>
-      </div>
-      <div>
-        <p class="text-slate-400 uppercase font-bold text-[9px] mb-1">Lehrgänge</p>
-        <div class="flex flex-wrap gap-1">
-          ${p.Lehrgaenge ? p.Lehrgaenge.split(',').map(l => `<span class="bg-slate-200 dark:bg-slate-700 px-2 py-1 rounded text-[10px]">${l.trim()}</span>`).join('') : '-'}
+
+      <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
+        <p class="text-[10px] uppercase font-bold text-slate-400 mb-3 tracking-widest">Ausbildungsstand</p>
+        <div class="grid grid-cols-1 gap-2">
+          ${lehrgangsListe.map(lg => {
+            const hatLehrgang = (p[lg] !== undefined && p[lg] !== null && p[lg] !== "");
+            return `
+              <div class="flex items-center justify-between text-xs py-1 border-b border-slate-50 dark:border-slate-700 last:border-0">
+                <span class="${hatLehrgang ? 'font-bold' : 'text-slate-400'}">${lg}</span>
+                <span>${hatLehrgang ? '✅' : '⚪'}</span>
+              </div>
+            `;
+          }).join('')}
         </div>
       </div>
+
+      <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl">
+        <div><p class="text-slate-400 uppercase font-bold">Geburtstag</p><p class="font-medium">${p.Geburtsdatum || '-'}</p></div>
+        <div><p class="text-slate-400 uppercase font-bold">Letzte Bef.</p><p class="font-medium">${p.Letzte_Befoerderung || '-'}</p></div>
+      </div>
     </div>`;
+  
   document.getElementById('member-modal').classList.remove('hidden');
 }
 
