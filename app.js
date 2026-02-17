@@ -159,6 +159,18 @@ function showDetails(index) {
     "Gruppenführer", "Zugführer", "Verbandsführer 1", "Verbandsführer 2"
   ];
 
+  const berechneDienstzeit = (eintrittStr) => {
+  if (!eintrittStr || eintrittStr === '-') return '-';
+  
+  // Datum umwandeln (Erwartet dd.mm.yyyy aus deinem Apps Script Fix)
+  const parts = eintrittStr.split('.');
+  const eintrittDate = new Date(parts[2], parts[1] - 1, parts[0]);
+  const stichtagDate = new Date(appData.stichtag);
+  
+  const diff = stichtagDate - eintrittDate;
+  const jahre = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+  return jahre >= 0 ? jahre + " J." : "0 J.";
+};
   content.innerHTML = `
     <div class="mb-6">
       <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname}</h2>
@@ -208,15 +220,18 @@ function showDetails(index) {
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl">
+      <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl mt-4">
         <div>
-  <p class="text-slate-400 uppercase font-bold">Geburtstag</p>
-  <p class="font-medium">${formatDateClean(p.Geburtstag)}</p>
-</div>
-<div>
-  <p class="text-slate-400 uppercase font-bold">Letzte Bef.</p>
-  <p class="font-medium">${formatDateClean(p.Letzte_Befoerderung)}</p>
-</div>
+          <p class="text-slate-400 uppercase font-bold">Geburtstag</p>
+          <p class="font-medium">${formatDateClean(p.Geburtstag)}</p>
+        </div>
+        <div>
+          <p class="text-slate-400 uppercase font-bold">Letzte Bef. | Dienstzeit</p>
+          <p class="font-medium">
+            ${formatDateClean(p.Letzte_Befoerderung)} | 
+            <span class="text-red-700 font-bold">${berechneDienstzeit(p.Eintritt)}</span>
+          </p>
+        </div>
       </div>
     </div>`;
   
