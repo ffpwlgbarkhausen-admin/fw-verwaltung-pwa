@@ -213,7 +213,7 @@ function renderPersonal() {
                              <p class="text-[10px] text-slate-300 uppercase font-black">Status</p>
                              <p class="text-[10px] font-bold ${promo.isFällig ? 'text-orange-600' : 'text-slate-400'}">${promo.isFällig ? 'Beförderung fällig' : 'Aktiv'}</p>
                         </div>
-                        <span class="text-slate-200 text-2xl">chevron_right</span>
+                        <span class="text-slate-300 text-xl font-light">❯</span>
                     </div>
                 </div>`;
         });
