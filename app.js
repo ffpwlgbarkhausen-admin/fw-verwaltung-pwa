@@ -62,11 +62,13 @@ function initUI() {
     const loader = document.getElementById('loader');
     if(loader) loader.classList.add('hidden');
     
-    // Setze das Datum im Input-Feld auf den aktuellen Stichtag aus der API
+    // Fix für den Datums-Shift (29. statt 30.)
     const stichtagInput = document.getElementById('stichtag-input');
     if(stichtagInput && appData.stichtag) {
-        const d = AppUtils.parseDate(appData.stichtag);
-        if(d) stichtagInput.value = d.toISOString().split('T')[0];
+        // Wir nehmen den String (JJJJ-MM-TT) und setzen ihn direkt,
+        // ohne ihn erst in ein Date-Objekt umzuwandeln, das Zeitzonen beachtet.
+        const rawDate = appData.stichtag; // Das kommt als "2026-05-30" vom Script
+        stichtagInput.value = rawDate;
     }
 
     showView('home');
