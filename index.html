@@ -28,22 +28,19 @@
     </div>
 
     <div id="view-home" class="view space-y-4">
-      <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Stichtag Evaluation</p>
-        <h2 id="stichtag-display" class="text-2xl font-black text-red-700 italic">--.--.----</h2>
-      </div>
-      <h3 class="font-bold text-red-700">Beförderungskandidaten</h3>
-      <div id="promo-list" class="space-y-3"></div>
+        <div id="promo-list" class="space-y-3"></div>
     </div>
 
-    <div id="view-personal" class="view space-y-4">
-      <div id="personal-stats" class="grid grid-cols-2 gap-2 mb-4">
-      </div>
-      <input type="text" id="search" onkeyup="filterPersonal()" placeholder="Name suchen..." 
-             class="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-2 focus:ring-red-700">
-      <div id="member-list" class="space-y-2"></div>
+    <div id="view-personal" class="view space-y-6 hidden"> 
+        <div id="personal-stats"></div>
+
+        <div class="space-y-4">
+            <input type="text" id="search" onkeyup="filterPersonal()" placeholder="Name suchen..." 
+                   class="w-full p-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 outline-none focus:ring-4 focus:ring-red-700/10 transition-all font-medium">
+            <div id="member-list" class="space-y-3"></div>
+        </div>
     </div>
-  </main>
+</main>
 
   <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 p-4 flex justify-around z-50">
     <button onclick="showView('home')" class="flex flex-col items-center text-red-700"><span>🏠</span><span class="text-[10px] font-bold">Home</span></button>
