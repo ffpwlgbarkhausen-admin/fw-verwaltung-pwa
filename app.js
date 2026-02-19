@@ -1,5 +1,5 @@
 // --- KONFIGURATION & STATE ---
-const API_URL = "https://script.google.com/macros/s/AKfycbw7V1qsZVVFF6a7QFX5Yi06T0hugJQ-SuWviI-8R3D6ddGvUxTW3Sqo-eaFVedN4C3-/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbwVn_3H-5_RZtfMgZEkPB2xulwjtHbPGv046lPXTM0vyD6ZssGXc-o1zhe9jID5ncDn/exec"; 
 let appData = { personnel: [], stichtag: new Date(), promoRules: [] }; 
 
 // --- 1. HILFSFUNKTIONEN ---
