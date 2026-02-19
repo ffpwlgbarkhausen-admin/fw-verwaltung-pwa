@@ -57,6 +57,14 @@ async function fetchData() {
 function initUI() {
     const loader = document.getElementById('loader');
     if(loader) loader.classList.add('hidden');
+    
+    // Setze das Datum im Input-Feld auf den aktuellen Stichtag aus der API
+    const stichtagInput = document.getElementById('stichtag-input');
+    if(stichtagInput && appData.stichtag) {
+        const d = AppUtils.parseDate(appData.stichtag);
+        if(d) stichtagInput.value = d.toISOString().split('T')[0];
+    }
+
     showView('home');
     renderDashboard();
     renderPersonal();
@@ -104,14 +112,33 @@ function showView(name) {
 }
 
 function renderDashboard() {
-    const stichtagElement = document.getElementById('stichtag-display');
-    if(stichtagElement) stichtagElement.innerText = AppUtils.formatDate(appData.stichtag);
-    
     const list = document.getElementById('promo-list');
     if(!list) return;
-    list.innerHTML = "";
+    
+    // 1. ZUERST: Die Steuerung für den Stichtag aufbauen
+    // Wir nutzen appData.stichtag als Standardwert für das Input-Feld
+    const currentStichtagISO = AppUtils.parseDate(appData.stichtag).toISOString().split('T')[0];
 
-    // 1. JUBILÄEN (Jetzt im großen Karten-Design)
+    list.innerHTML = `
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-8">
+            <p class="text-[10px] uppercase text-slate-400 font-black tracking-widest mb-3 text-center">Simulation: Stichtag anpassen</p>
+            <div class="flex flex-col gap-3">
+                <div class="flex gap-2">
+                    <input type="date" id="stichtag-input" value="${currentStichtagISO}"
+                           class="flex-1 bg-slate-50 dark:bg-slate-900 border-none rounded-xl px-4 py-3 text-sm font-bold dark:text-white focus:ring-2 focus:ring-red-500 transition-all">
+                    <button onclick="updateStichtag()" 
+                            class="bg-red-700 text-white px-5 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-red-900/20">
+                        Speichern
+                    </button>
+                </div>
+                <p id="last-saved-info" class="text-[9px] text-slate-400 text-center italic">
+                    ${appData.lastSaved ? `Zuletzt aktualisiert: ${appData.lastSaved}` : 'Aktuell: Daten aus Google Tabelle'}
+                </p>
+            </div>
+        </div>
+    `;
+
+    // 2. JUBILÄEN
     const jubilare = appData.personnel
         .map(p => ({ ...p, dz: AppUtils.getDienstzeit(p.Eintritt) }))
         .filter(p => p.dz.isJubilaeum);
@@ -127,13 +154,12 @@ function renderDashboard() {
                     <p class="font-black text-sm dark:text-white">${j.Name}, ${j.Vorname}</p>
                     <p class="text-xs mt-1">
                         <span class="text-amber-600 font-black">🎖️ ${j.dz.jahre} Jahre Dienstzeit</span>
-                        <span class="text-slate-400 ml-1">• Herzlichen Glückwunsch!</span>
                     </p>
                 </div>`;
         });
     }
 
-    // 2. BEFÖRDERUNGEN (Konsistent zu den Jubiläen)
+    // 3. BEFÖRDERUNGEN
     const bereit = appData.personnel
         .map((p, idx) => ({ ...p, promo: checkPromotionStatus(p), originalIndex: idx }))
         .filter(p => p.promo.isFällig);
@@ -148,18 +174,30 @@ function renderDashboard() {
                 <div onclick="showDetails(${p.originalIndex})" class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border-l-4 border-green-500 mb-3 active:scale-95 transition-all cursor-pointer ring-1 ring-slate-200 dark:ring-slate-700">
                     <p class="font-black text-sm dark:text-white">${p.Name}, ${p.Vorname}</p>
                     <p class="text-xs mt-1">
-                        <span class="text-slate-400">${p.Dienstgrad}</span> 
-                        <span class="text-green-600 font-bold mx-1">➔</span> 
-                        <span class="text-green-600 font-black">Beförderung zum ${p.promo.nextDG}</span>
+                        <span class="text-slate-400">${p.Dienstgrad}</span> ➔ <span class="text-green-600 font-black">${p.promo.nextDG}</span>
                     </p>
                 </div>`;
         });
     } else {
-        list.innerHTML += `
-            <div class="text-center py-8 px-4 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
-                <p class="text-xs text-slate-400 italic font-medium">Aktuell keine anstehenden Ereignisse zum Stichtag.</p>
-            </div>`;
+        list.innerHTML += `<div class="text-center py-6 border-2 border-dashed border-slate-100 rounded-3xl text-slate-300 text-xs italic">Keine Ereignisse fällig.</div>`;
     }
+}
+
+// HILFSFUNKTION FÜR DEN SPEICHER-BUTTON
+function updateStichtag() {
+    const input = document.getElementById('stichtag-input');
+    if(!input) return;
+
+    // Wert in appData speichern
+    appData.stichtag = input.value;
+    
+    // Zeitstempel für "Zuletzt gespeichert"
+    const jetzt = new Date();
+    appData.lastSaved = jetzt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + " Uhr";
+
+    // Alles neu zeichnen (Dashboard + Personalverwaltung)
+    renderDashboard();
+    renderPersonal();
 }
 
 function renderPersonal() {
@@ -331,3 +369,24 @@ function filterPersonal() {
 }
 function closeDetails() { document.getElementById('member-modal').classList.add('hidden'); }
 function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
+function updateStichtag() {
+    const input = document.getElementById('stichtag-input');
+    if(!input || !input.value) return;
+
+    // 1. Neuen Stichtag in State übernehmen
+    appData.stichtag = input.value;
+    
+    // 2. Zeitstempel generieren
+    const jetzt = new Date();
+    appData.lastSaved = jetzt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + " Uhr";
+
+    // 3. UI komplett neu berechnen
+    renderDashboard();
+    renderPersonal();
+    
+    // Kleines Feedback-Highlight
+    const btn = event.target;
+    const originalText = btn.innerText;
+    btn.innerText = "✓ OK";
+    setTimeout(() => btn.innerText = originalText, 2000);
+}
