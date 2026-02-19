@@ -64,15 +64,22 @@ function initUI() {
     
     const stichtagInput = document.getElementById('stichtag-input');
     if(stichtagInput && appData.stichtag) {
-        // Wir zerlegen den Text "30.05.2026" von Hand
-        const parts = appData.stichtag.split('.'); 
-        if(parts.length === 3) {
-            // Wir bauen daraus "2026-05-30" für das Input-Feld
-            const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-            stichtagInput.value = isoDate;
+        // .trim() entfernt unsichtbare Leerzeichen
+        const rawDate = appData.stichtag.trim(); 
+        
+        if(rawDate.includes('.')) {
+            const parts = rawDate.split('.'); 
+            if(parts.length === 3) {
+                // Konvertiert "30.05.2026" zu "2026-05-30"
+                // Die Ziffern müssen: Jahr (4), Monat (2), Tag (2) sein
+                const day = parts[0].padStart(2, '0');
+                const month = parts[1].padStart(2, '0');
+                const year = parts[2];
+                stichtagInput.value = `${year}-${month}-${day}`;
+            }
         } else {
-            // Falls es schon ISO ist (Fallback)
-            stichtagInput.value = appData.stichtag;
+            // Falls es doch schon im Format YYYY-MM-DD kommt
+            stichtagInput.value = rawDate;
         }
     }
 
