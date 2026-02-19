@@ -171,17 +171,26 @@ function renderPersonal() {
     const abteilungen = {};
     appData.personnel.forEach(p => { abteilungen[p.Abteilung] = (abteilungen[p.Abteilung] || 0) + 1; });
 
-    // Statistik-Boxen (Bleiben groß wie besprochen)
     statsDiv.innerHTML = `
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-md border border-slate-100 dark:border-slate-700 flex-1">
-            <p class="text-[11px] uppercase text-slate-400 font-black tracking-widest mb-1">Gesamtstärke</p>
-            <p class="text-3xl font-black text-red-700">${appData.personnel.length}</p>
-        </div>
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-md border border-slate-100 dark:border-slate-700 flex-[2]">
-            <p class="text-[11px] uppercase text-slate-400 font-black tracking-widest mb-1">Abteilungs-Verteilung</p>
-            <p class="text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
-                ${Object.entries(abteilungen).map(([n, v]) => `<span class="inline-block bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg mr-1 mb-1">${n}: ${v}</span>`).join('')}
-            </p>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-6">
+            <div class="flex flex-col">
+                <p class="text-[10px] uppercase text-slate-400 font-black tracking-widest">Gesamtstärke</p>
+                <p class="text-4xl font-black text-red-700 leading-none mt-1">${appData.personnel.length}</p>
+            </div>
+            
+            <div class="hidden sm:block w-[1px] h-12 bg-slate-100 dark:bg-slate-700"></div>
+
+            <div class="flex-1">
+                <p class="text-[10px] uppercase text-slate-400 font-black tracking-widest mb-2">Abteilungs-Verteilung</p>
+                <div class="flex flex-wrap gap-2">
+                    ${Object.entries(abteilungen).map(([n, v]) => `
+                        <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                            <span class="text-[10px] font-black text-red-700">${n}</span>
+                            <span class="text-xs font-bold dark:text-white">${v}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
         </div>`;
 
     appData.personnel
@@ -196,7 +205,7 @@ function renderPersonal() {
             const zielDG = rule ? rule.Ziel_DG_Kurz : "---";
 
             if (promo.isFällig) {
-                zeitInfo = `<span class="text-orange-600 font-black italic">JETZT FÄLLIG ZUM ${zielDG}!</span>`;
+                zeitInfo = `<span class="text-orange-600 font-black italic uppercase">Jetzt fällig zum ${zielDG}!</span>`;
             } else if (rule) {
                 const letzteBef = AppUtils.parseDate(p.Letzte_Befoerderung);
                 const stichtag = AppUtils.parseDate(appData.stichtag);
@@ -205,12 +214,11 @@ function renderPersonal() {
                     const restJahre = parseFloat(rule.Wartezeit_Jahre) - erreichteJahre;
                     
                     if (restJahre > 0) {
-                        // Umwandlung in Monate wenn < 1 Jahr
                         const restAnzeige = restJahre < 1 
                             ? `${Math.ceil(restJahre * 12)} Mon.` 
                             : `${restJahre.toFixed(1)} J.`;
                         
-                        zeitInfo = `<span class="text-slate-400 font-bold">NOCH ${restAnzeige} BIS ${zielDG}</span>`;
+                        zeitInfo = `<span class="text-slate-400 font-bold uppercase">Noch ${restAnzeige} bis ${zielDG}</span>`;
                     }
                 }
             }
@@ -238,7 +246,7 @@ function renderPersonal() {
                              <p class="text-[9px] text-slate-300 uppercase font-black tracking-widest">Dienstzeit</p>
                              <p class="text-xs font-black ${dz.isJubilaeum ? 'text-amber-500' : 'text-slate-600 dark:text-slate-300'}">${dz.text}</p>
                         </div>
-                        <span class="text-slate-300 text-xl">❯</span>
+                        <span class="text-slate-300 text-xl font-light">❯</span>
                     </div>
                 </div>`;
         });
