@@ -190,20 +190,27 @@ function renderPersonal() {
         .forEach((p) => {
             const promo = checkPromotionStatus(p);
             const dz = AppUtils.getDienstzeit(p.Eintritt);
-            
-            // Logik für "Zeit bis..."
+
             let zeitInfo = "";
+            const rule = appData.promoRules.find(r => r.Vorheriger_DG.trim() === p.Dienstgrad.trim());
+            const zielDG = rule ? rule.Ziel_DG_Kurz : "---";
+
             if (promo.isFällig) {
-                zeitInfo = `<span class="text-orange-600 font-black italic">Jetzt fällig!</span>`;
-            } else {
-                const rule = appData.promoRules.find(r => r.Vorheriger_DG.trim() === p.Dienstgrad.trim());
-                if (rule) {
-                    const letzteBef = AppUtils.parseDate(p.Letzte_Befoerderung);
-                    const stichtag = AppUtils.parseDate(appData.stichtag);
-                    if (letzteBef) {
-                        const erreichteJahre = (stichtag - letzteBef) / (1000 * 60 * 60 * 24 * 365.25);
-                        const rest = parseFloat(rule.Wartezeit_Jahre) - erreichteJahre;
-                        if (rest > 0) zeitInfo = `<span class="text-slate-400">noch ${rest.toFixed(1)} J. bis Bef.</span>`;
+                zeitInfo = `<span class="text-orange-600 font-black italic">JETZT FÄLLIG ZUM ${zielDG}!</span>`;
+            } else if (rule) {
+                const letzteBef = AppUtils.parseDate(p.Letzte_Befoerderung);
+                const stichtag = AppUtils.parseDate(appData.stichtag);
+                if (letzteBef) {
+                    const erreichteJahre = (stichtag - letzteBef) / (1000 * 60 * 60 * 24 * 365.25);
+                    const restJahre = parseFloat(rule.Wartezeit_Jahre) - erreichteJahre;
+                    
+                    if (restJahre > 0) {
+                        // Umwandlung in Monate wenn < 1 Jahr
+                        const restAnzeige = restJahre < 1 
+                            ? `${Math.ceil(restJahre * 12)} Mon.` 
+                            : `${restJahre.toFixed(1)} J.`;
+                        
+                        zeitInfo = `<span class="text-slate-400 font-bold">NOCH ${restAnzeige} BIS ${zielDG}</span>`;
                     }
                 }
             }
@@ -219,10 +226,10 @@ function renderPersonal() {
                                 <span class="text-slate-400 font-medium text-sm ml-1">(${p.PersNr || '---'})</span>
                             </p>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <span class="text-[10px] bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-2 py-1 rounded-md font-black uppercase tracking-tighter">${p.Abteilung}</span>
                             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">${p.Dienstgrad}</span>
-                            <span class="text-[10px] ml-2 font-bold uppercase tracking-widest">${zeitInfo}</span>
+                            <span class="text-[10px] ml-1 font-bold tracking-tight">${zeitInfo}</span>
                         </div>
                     </div>
                     
