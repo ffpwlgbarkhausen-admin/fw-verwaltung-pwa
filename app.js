@@ -162,27 +162,40 @@ function renderPersonal() {
 }
 
 function checkPromotionStatus(p) {
+    // Findet die Regel für den aktuellen Dienstgrad
     const rules = appData.promoRules.filter(r => r.Vorheriger_DG === p.Dienstgrad);
     let status = { isFällig: false, nextDG: "", missing: [] };
+    
     if (rules.length === 0) return status;
 
-    rules.forEach(rule => {
-        const stichtag = AppUtils.parseDate(appData.stichtag);
-        const letzteBef = AppUtils.parseDate(p.Letzte_Befoerderung);
+    // Wir nehmen die erste passende Regel
+    const rule = rules[0]; 
+    status.nextDG = rule.Ziel_DG_Kurz; // Ziel setzen wir sofort fest!
+
+    const stichtag = AppUtils.parseDate(appData.stichtag);
+    const letzteBef = AppUtils.parseDate(p.Letzte_Befoerderung);
+    
+    // Zeitprüfung
+    let zeitOK = false;
+    if (letzteBef) {
         const jahre = (stichtag - letzteBef) / (1000 * 60 * 60 * 24 * 365.25);
-        const zeitOK = jahre >= parseFloat(rule.Wartezeit_Jahre);
+        zeitOK = jahre >= parseFloat(rule.Wartezeit_Jahre);
+    } else {
+        status.missing.push("Datum letzte Beförderung fehlt");
+    }
 
-        const geforderterLehrgang = rule.Notwendiger_Lehrgang;
-        const lehrgangOK = !geforderterLehrgang || (p[geforderterLehrgang] !== undefined && p[geforderterLehrgang] !== "" && p[geforderterLehrgang] !== null);
+    // Lehrgangsprüfung
+    const geforderterLehrgang = rule.Notwendiger_Lehrgang;
+    const lehrgangOK = !geforderterLehrgang || (p[geforderterLehrgang] !== undefined && p[geforderterLehrgang] !== "" && p[geforderterLehrgang] !== null);
 
-        if (zeitOK && lehrgangOK) {
-            status.isFällig = true;
-            status.nextDG = rule.Ziel_DG_Kurz;
-        } else if (zeitOK && !lehrgangOK) {
-            status.nextDG = rule.Ziel_DG_Kurz;
-            status.missing.push(`Lehrgang fehlt: ${geforderterLehrgang}`);
-        }
-    });
+    // Finaler Status
+    if (zeitOK && lehrgangOK) {
+        status.isFällig = true;
+    } else {
+        if (!zeitOK) status.missing.push("Wartezeit noch nicht erfüllt");
+        if (!lehrgangOK) status.missing.push(`Lehrgang fehlt: ${geforderterLehrgang}`);
+    }
+
     return status;
 }
 
