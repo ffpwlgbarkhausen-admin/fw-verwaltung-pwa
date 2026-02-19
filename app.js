@@ -171,35 +171,53 @@ function renderPersonal() {
     const abteilungen = {};
     appData.personnel.forEach(p => { abteilungen[p.Abteilung] = (abteilungen[p.Abteilung] || 0) + 1; });
 
+    // Größere Statistik-Boxen oben
     statsDiv.innerHTML = `
-        <div class="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex-1">
-            <p class="text-[10px] uppercase text-slate-400 font-bold">Gesamt</p>
-            <p class="text-xl font-black text-red-700">${appData.personnel.length}</p>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-md border border-slate-100 dark:border-slate-700 flex-1">
+            <p class="text-[11px] uppercase text-slate-400 font-black tracking-widest mb-1">Gesamtstärke</p>
+            <p class="text-3xl font-black text-red-700">${appData.personnel.length}</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex-[2]">
-            <p class="text-[10px] uppercase text-slate-400 font-bold">Abteilungen</p>
-            <p class="text-[9px] font-medium text-slate-600 dark:text-slate-300">${Object.entries(abteilungen).map(([n, v]) => `${n}: ${v}`).join(' | ')}</p>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-md border border-slate-100 dark:border-slate-700 flex-[2]">
+            <p class="text-[11px] uppercase text-slate-400 font-black tracking-widest mb-1">Abteilungs-Verteilung</p>
+            <p class="text-xs font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
+                ${Object.entries(abteilungen).map(([n, v]) => `<span class="inline-block bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-lg mr-1 mb-1">${n}: ${v}</span>`).join('')}
+            </p>
         </div>`;
 
+    // Großzügigere Mitglieder-Liste
     appData.personnel
         .map((p, originalIndex) => ({ ...p, originalIndex })) 
         .sort((a, b) => a.Name.localeCompare(b.Name))
         .forEach((p) => {
             const promo = checkPromotionStatus(p);
             list.innerHTML += `
-                <div data-index="${p.originalIndex}" onclick="showDetails(${p.originalIndex})" class="member-item bg-white dark:bg-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-sm mb-2 border-l-4 ${promo.isFällig ? 'border-orange-500 bg-orange-50/20' : 'border-transparent'} active:scale-95 transition-all cursor-pointer">
+                <div data-index="${p.originalIndex}" onclick="showDetails(${p.originalIndex})" 
+                     class="member-item bg-white dark:bg-slate-800 p-5 rounded-2xl flex justify-between items-center shadow-sm mb-3 border border-slate-100 dark:border-slate-700 border-l-4 ${promo.isFällig ? 'border-l-orange-500 bg-orange-50/10' : 'border-l-slate-300'} active:scale-[0.98] transition-all cursor-pointer">
+                    
                     <div class="flex-1">
-                        <p class="font-bold text-sm text-slate-800 dark:text-white">
-                            ${p.Name}, ${p.Vorname} ${p.PersNr ? `(${p.PersNr})` : ''} 
-                            ${promo.isFällig ? `<span class="ml-2 text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full">BEFÖRDERN</span>` : ''}
-                        </p>
-                        <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">${p.Abteilung} | ${p.Dienstgrad}</p>
+                        <div class="flex items-center gap-2 mb-1">
+                            <p class="font-black text-base text-slate-800 dark:text-white">
+                                ${p.Name}, ${p.Vorname} 
+                                <span class="text-slate-400 font-medium text-sm ml-1">(${p.PersNr || '---'})</span>
+                            </p>
+                            ${promo.isFällig ? `<span class="text-[9px] bg-orange-500 text-white px-2 py-0.5 rounded-full font-black animate-pulse">PRÜFEN</span>` : ''}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-md font-bold uppercase tracking-tighter">${p.Abteilung}</span>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">${p.Dienstgrad}</span>
+                        </div>
                     </div>
-                    <span class="text-red-700 text-lg opacity-30">➔</span>
+                    
+                    <div class="flex items-center gap-3">
+                        <div class="text-right hidden sm:block">
+                             <p class="text-[10px] text-slate-300 uppercase font-black">Status</p>
+                             <p class="text-[10px] font-bold ${promo.isFällig ? 'text-orange-600' : 'text-slate-400'}">${promo.isFällig ? 'Beförderung fällig' : 'Aktiv'}</p>
+                        </div>
+                        <span class="text-slate-200 text-2xl">chevron_right</span>
+                    </div>
                 </div>`;
         });
 }
-
 function showDetails(index) {
     const p = appData.personnel[index];
     const promo = checkPromotionStatus(p);
