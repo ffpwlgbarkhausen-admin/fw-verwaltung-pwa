@@ -171,7 +171,7 @@ function renderPersonal() {
     const abteilungen = {};
     appData.personnel.forEach(p => { abteilungen[p.Abteilung] = (abteilungen[p.Abteilung] || 0) + 1; });
 
-    // Größere Statistik-Boxen oben
+    // Statistik-Boxen (Bleiben groß wie besprochen)
     statsDiv.innerHTML = `
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-md border border-slate-100 dark:border-slate-700 flex-1">
             <p class="text-[11px] uppercase text-slate-400 font-black tracking-widest mb-1">Gesamtstärke</p>
@@ -184,12 +184,30 @@ function renderPersonal() {
             </p>
         </div>`;
 
-    // Großzügigere Mitglieder-Liste
     appData.personnel
         .map((p, originalIndex) => ({ ...p, originalIndex })) 
         .sort((a, b) => a.Name.localeCompare(b.Name))
         .forEach((p) => {
             const promo = checkPromotionStatus(p);
+            const dz = AppUtils.getDienstzeit(p.Eintritt);
+            
+            // Logik für "Zeit bis..."
+            let zeitInfo = "";
+            if (promo.isFällig) {
+                zeitInfo = `<span class="text-orange-600 font-black italic">Jetzt fällig!</span>`;
+            } else {
+                const rule = appData.promoRules.find(r => r.Vorheriger_DG.trim() === p.Dienstgrad.trim());
+                if (rule) {
+                    const letzteBef = AppUtils.parseDate(p.Letzte_Befoerderung);
+                    const stichtag = AppUtils.parseDate(appData.stichtag);
+                    if (letzteBef) {
+                        const erreichteJahre = (stichtag - letzteBef) / (1000 * 60 * 60 * 24 * 365.25);
+                        const rest = parseFloat(rule.Wartezeit_Jahre) - erreichteJahre;
+                        if (rest > 0) zeitInfo = `<span class="text-slate-400">noch ${rest.toFixed(1)} J. bis Bef.</span>`;
+                    }
+                }
+            }
+
             list.innerHTML += `
                 <div data-index="${p.originalIndex}" onclick="showDetails(${p.originalIndex})" 
                      class="member-item bg-white dark:bg-slate-800 p-5 rounded-2xl flex justify-between items-center shadow-sm mb-3 border border-slate-100 dark:border-slate-700 border-l-4 ${promo.isFällig ? 'border-l-orange-500 bg-orange-50/10' : 'border-l-slate-300'} active:scale-[0.98] transition-all cursor-pointer">
@@ -200,20 +218,20 @@ function renderPersonal() {
                                 ${p.Name}, ${p.Vorname} 
                                 <span class="text-slate-400 font-medium text-sm ml-1">(${p.PersNr || '---'})</span>
                             </p>
-                            ${promo.isFällig ? `<span class="text-[9px] bg-orange-500 text-white px-2 py-0.5 rounded-full font-black animate-pulse">PRÜFEN</span>` : ''}
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-[10px] bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-2 py-0.5 rounded-md font-bold uppercase tracking-tighter">${p.Abteilung}</span>
+                            <span class="text-[10px] bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-2 py-1 rounded-md font-black uppercase tracking-tighter">${p.Abteilung}</span>
                             <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">${p.Dienstgrad}</span>
+                            <span class="text-[10px] ml-2 font-bold uppercase tracking-widest">${zeitInfo}</span>
                         </div>
                     </div>
                     
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-4">
                         <div class="text-right hidden sm:block">
-                             <p class="text-[10px] text-slate-300 uppercase font-black">Status</p>
-                             <p class="text-[10px] font-bold ${promo.isFällig ? 'text-orange-600' : 'text-slate-400'}">${promo.isFällig ? 'Beförderung fällig' : 'Aktiv'}</p>
+                             <p class="text-[9px] text-slate-300 uppercase font-black tracking-widest">Dienstzeit</p>
+                             <p class="text-xs font-black ${dz.isJubilaeum ? 'text-amber-500' : 'text-slate-600 dark:text-slate-300'}">${dz.text}</p>
                         </div>
-                        <span class="text-slate-300 text-xl font-light">❯</span>
+                        <span class="text-slate-300 text-xl">❯</span>
                     </div>
                 </div>`;
         });
