@@ -210,26 +210,49 @@ function showDetails(index) {
 
     content.innerHTML = `
     <div class="mb-6">
-        <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname} ${p.PersNr ? `<span class="text-slate-400 font-medium">(${p.PersNr})</span>` : ''}</h2>
-        <p class="text-red-700 font-bold">${p.Abteilung} • ${p.Dienstgrad}</p>
+        <h2 class="text-2xl font-black dark:text-white">${p.Name}, ${p.Vorname} ${p.PersNr ? `<span class="text-slate-400 font-medium text-lg">(${p.PersNr})</span>` : ''}</h2>
+        <p class="text-red-700 font-bold uppercase text-xs tracking-wider">${p.Abteilung} • ${p.Dienstgrad}</p>
     </div>
+    
     <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
         <div class="grid grid-cols-2 gap-3">
-            <a href="tel:${cleanPhone}" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-slate-100 dark:bg-slate-700 p-4 rounded-2xl font-bold gap-2 active:scale-95 transition">📞 Anrufen</a>
+            <a href="tel:${cleanPhone}" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-slate-100 dark:bg-slate-700 p-4 rounded-2xl font-bold gap-2 active:scale-95 transition dark:text-white">📞 Anrufen</a>
             <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold gap-2 active:scale-95 transition">💬 WhatsApp</a>
         </div>
-        <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
-            <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Anschrift</p>
-            <p class="text-xs font-medium">${p.Adresse || 'Keine Adresse hinterlegt'}</p>
-        </div>
-        <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-600 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-700/50 border-l-4 border-slate-400'}">
+
+        <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-600 text-white shadow-lg' : 'bg-slate-50 dark:bg-slate-900/50 border-l-4 border-slate-400'}">
             <p class="text-[10px] uppercase font-bold ${promo.isFällig ? 'text-green-100' : 'text-slate-500'} tracking-wider">Status Beförderung</p>
             ${promo.isFällig 
-                ? `<p class="text-lg font-black mt-1">Beförderung zum ${promo.nextDG} veranlassen!</p>`
-                : `<p class="text-sm font-bold mt-1">Nächstes Ziel: <span class="text-red-700">${promo.nextDG || 'Endstufe erreicht'}</span></p>
+                ? `<p class="text-lg font-black mt-1">Beförderung zum ${promo.nextDG} veranlassen!</p>
+                   <p class="text-[10px] opacity-90 mt-1">✓ Wartezeit und Lehrgang erfolgreich abgeschlossen.</p>`
+                : `<p class="text-sm font-bold mt-1 dark:text-white">Nächstes Ziel: <span class="text-red-700">${promo.nextDG || 'Endstufe erreicht'}</span></p>
                    ${promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2">⚠ ${promo.missing.join(', ')}</p>` : ''}`
             }
         </div>
+
+        <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+            <div class="space-y-3">
+                <div>
+                    <p class="text-slate-400 uppercase font-bold tracking-tight">Geburtstag</p>
+                    <p class="font-bold text-sm dark:text-white">${AppUtils.formatDate(p.Geburtstag)}</p>
+                </div>
+                <div>
+                    <p class="text-slate-400 uppercase font-bold tracking-tight">Eintritt</p>
+                    <p class="font-bold text-sm dark:text-white">${AppUtils.formatDate(p.Eintritt)}</p>
+                </div>
+            </div>
+            <div class="flex flex-col justify-between p-2 rounded-xl ${dz.isJubilaeum ? 'bg-amber-100/50 ring-1 ring-amber-400' : 'bg-white/50 dark:bg-slate-800/50'}">
+                <div>
+                    <p class="text-slate-400 uppercase font-bold tracking-tight">Letzte Beförderung</p>
+                    <p class="font-bold text-sm dark:text-white">${AppUtils.formatDate(p.Letzte_Befoerderung)}</p>
+                </div>
+                <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                    <p class="text-slate-400 uppercase font-bold tracking-tight">Dienstzeit ${dz.isJubilaeum ? '🎖️' : ''}</p>
+                    <p class="font-black text-red-700 text-base">${dz.text}</p>
+                </div>
+            </div>
+        </div>
+
         <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
             <p class="text-[10px] uppercase font-bold text-slate-400 mb-3 tracking-widest">Ausbildungsstand</p>
             <div class="grid grid-cols-1 gap-2">
@@ -243,6 +266,7 @@ function showDetails(index) {
             </div>
         </div>
     </div>`;
+
     document.getElementById('member-modal').classList.remove('hidden');
 }
 
