@@ -111,38 +111,54 @@ function renderDashboard() {
     if(!list) return;
     list.innerHTML = "";
 
-    // Jubiläen
+    // 1. JUBILÄEN (Jetzt im großen Karten-Design)
     const jubilare = appData.personnel
         .map(p => ({ ...p, dz: AppUtils.getDienstzeit(p.Eintritt) }))
         .filter(p => p.dz.isJubilaeum);
 
     if(jubilare.length > 0) {
-        list.innerHTML += `<h3 class="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest text-center">🎖️ Jubiläen</h3>`;
+        list.innerHTML += `<h3 class="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest flex items-center gap-2">
+            <span class="w-8 h-[1px] bg-slate-200"></span> 🎖️ Jubiläen
+        </h3>`;
+        
         jubilare.forEach(j => {
-            list.innerHTML += `<div class="bg-yellow-50 dark:bg-yellow-900/10 p-3 rounded-xl border border-yellow-200 mb-3 text-center">
-                <p class="text-[10px] font-bold text-yellow-700">${j.dz.jahre} J. Dienstzeit: <span class="text-slate-800 dark:text-white">${j.Name}</span></p>
-            </div>`;
+            list.innerHTML += `
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border-l-4 border-amber-400 mb-3 ring-1 ring-slate-200 dark:ring-slate-700">
+                    <p class="font-black text-sm dark:text-white">${j.Name}, ${j.Vorname}</p>
+                    <p class="text-xs mt-1">
+                        <span class="text-amber-600 font-black">🎖️ ${j.dz.jahre} Jahre Dienstzeit</span>
+                        <span class="text-slate-400 ml-1">• Herzlichen Glückwunsch!</span>
+                    </p>
+                </div>`;
         });
     }
 
-    // Beförderungen
+    // 2. BEFÖRDERUNGEN (Konsistent zu den Jubiläen)
     const bereit = appData.personnel
         .map((p, idx) => ({ ...p, promo: checkPromotionStatus(p), originalIndex: idx }))
         .filter(p => p.promo.isFällig);
 
-    list.innerHTML += `<h3 class="text-[10px] font-black uppercase text-slate-400 mb-3 mt-6 tracking-widest">📋 Beförderungen veranlassen</h3>`;
+    list.innerHTML += `<h3 class="text-[10px] font-black uppercase text-slate-400 mb-3 mt-6 tracking-widest flex items-center gap-2">
+        <span class="w-8 h-[1px] bg-slate-200"></span> 📋 Beförderungen
+    </h3>`;
+
     if(bereit.length > 0) {
         bereit.forEach(p => {
             list.innerHTML += `
                 <div onclick="showDetails(${p.originalIndex})" class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border-l-4 border-green-500 mb-3 active:scale-95 transition-all cursor-pointer ring-1 ring-slate-200 dark:ring-slate-700">
                     <p class="font-black text-sm dark:text-white">${p.Name}, ${p.Vorname}</p>
                     <p class="text-xs mt-1">
-                        <span class="text-slate-400">${p.Dienstgrad}</span> ➔ <span class="text-green-600 font-black">Beförderung zum ${p.promo.nextDG}</span>
+                        <span class="text-slate-400">${p.Dienstgrad}</span> 
+                        <span class="text-green-600 font-bold mx-1">➔</span> 
+                        <span class="text-green-600 font-black">Beförderung zum ${p.promo.nextDG}</span>
                     </p>
                 </div>`;
         });
     } else {
-        list.innerHTML += `<p class="text-center text-xs text-slate-400 py-4 italic border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-2xl">Keine fälligen Beförderungen zum Stichtag.</p>`;
+        list.innerHTML += `
+            <div class="text-center py-8 px-4 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+                <p class="text-xs text-slate-400 italic font-medium">Aktuell keine anstehenden Ereignisse zum Stichtag.</p>
+            </div>`;
     }
 }
 
