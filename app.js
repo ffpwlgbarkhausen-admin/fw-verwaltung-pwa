@@ -62,13 +62,18 @@ function initUI() {
     const loader = document.getElementById('loader');
     if(loader) loader.classList.add('hidden');
     
-    // Fix für den Datums-Shift (29. statt 30.)
     const stichtagInput = document.getElementById('stichtag-input');
     if(stichtagInput && appData.stichtag) {
-        // Wir nehmen den String (JJJJ-MM-TT) und setzen ihn direkt,
-        // ohne ihn erst in ein Date-Objekt umzuwandeln, das Zeitzonen beachtet.
-        const rawDate = appData.stichtag; // Das kommt als "2026-05-30" vom Script
-        stichtagInput.value = rawDate;
+        // Wir zerlegen den Text "30.05.2026" von Hand
+        const parts = appData.stichtag.split('.'); 
+        if(parts.length === 3) {
+            // Wir bauen daraus "2026-05-30" für das Input-Feld
+            const isoDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+            stichtagInput.value = isoDate;
+        } else {
+            // Falls es schon ISO ist (Fallback)
+            stichtagInput.value = appData.stichtag;
+        }
     }
 
     showView('home');
