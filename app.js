@@ -2,9 +2,8 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbw7V1qsZVVFF6a7QFX5Yi06T0hugJQ-SuWviI-8R3D6ddGvUxTW3Sqo-eaFVedN4C3-/exec"; 
 let appData = { personnel: [], stichtag: new Date(), promoRules: [] }; 
 
-// --- 1. HILFSFUNKTIONEN (Zentral für die ganze App) ---
+// --- 1. HILFSFUNKTIONEN ---
 const AppUtils = {
-    // Wandelt alles in ein echtes Datum um (ISO oder TT.MM.JJJJ)
     parseDate: (str) => {
         if (!str || str === '-') return null;
         let d = new Date(str);
@@ -15,14 +14,11 @@ const AppUtils = {
         return isNaN(d.getTime()) ? null : d;
     },
 
-    // Formatiert Datum für die Anzeige
     formatDate: (dateInput) => {
         const d = AppUtils.parseDate(dateInput);
-        if (!d) return '-';
-        return d.toLocaleDateString('de-DE');
+        return d ? d.toLocaleDateString('de-DE') : '-';
     },
 
-    // Berechnet Dienstzeit & Jubiläum
     getDienstzeit: (eintrittInput) => {
         const eintritt = AppUtils.parseDate(eintrittInput);
         if (!eintritt) return { text: '-', isJubilaeum: false, jahre: 0 };
@@ -66,6 +62,38 @@ function initUI() {
     renderPersonal();
 }
 
+function checkPromotionStatus(p) {
+    const rules = appData.promoRules.filter(r => r.Vorheriger_DG.trim() === p.Dienstgrad.trim());
+    let status = { isFällig: false, nextDG: "", missing: [] };
+    if (rules.length === 0) return status;
+
+    const rule = rules[0]; 
+    status.nextDG = rule.Ziel_DG_Kurz;
+
+    const stichtag = AppUtils.parseDate(appData.stichtag);
+    const letzteBef = AppUtils.parseDate(p.Letzte_Befoerderung);
+    
+    // Zeitprüfung
+    let zeitOK = false;
+    if (letzteBef) {
+        const jahre = (stichtag - letzteBef) / (1000 * 60 * 60 * 24 * 365.25);
+        zeitOK = jahre >= parseFloat(rule.Wartezeit_Jahre);
+    }
+
+    // Lehrgangsprüfung
+    const gefLg = rule.Notwendiger_Lehrgang ? rule.Notwendiger_Lehrgang.trim() : "";
+    const hatLg = p[gefLg] ? p[gefLg].toString().trim() !== "" : false;
+    const lehrgangOK = !gefLg || hatLg;
+
+    if (zeitOK && lehrgangOK) {
+        status.isFällig = true;
+    } else {
+        if (!zeitOK) status.missing.push("Wartezeit");
+        if (!lehrgangOK) status.missing.push(`Lehrgang: ${gefLg}`);
+    }
+    return status;
+}
+
 // --- 3. UI RENDERING ---
 function showView(name) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -83,8 +111,8 @@ function renderDashboard() {
     if(!list) return;
     list.innerHTML = "";
 
-    // Jubiläen (kurz & bündig)
-    let jubilare = appData.personnel
+    // Jubiläen
+    const jubilare = appData.personnel
         .map(p => ({ ...p, dz: AppUtils.getDienstzeit(p.Eintritt) }))
         .filter(p => p.dz.isJubilaeum);
 
@@ -97,22 +125,19 @@ function renderDashboard() {
         });
     }
 
-    // BEFÖRDERUNGEN VERANLASSEN (Zeit & Lehrgang erfüllt)
+    // Beförderungen
     const bereit = appData.personnel
         .map((p, idx) => ({ ...p, promo: checkPromotionStatus(p), originalIndex: idx }))
         .filter(p => p.promo.isFällig);
 
     list.innerHTML += `<h3 class="text-[10px] font-black uppercase text-slate-400 mb-3 mt-6 tracking-widest">📋 Beförderungen veranlassen</h3>`;
-
     if(bereit.length > 0) {
         bereit.forEach(p => {
             list.innerHTML += `
                 <div onclick="showDetails(${p.originalIndex})" class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border-l-4 border-green-500 mb-3 active:scale-95 transition-all cursor-pointer ring-1 ring-slate-200 dark:ring-slate-700">
                     <p class="font-black text-sm dark:text-white">${p.Name}, ${p.Vorname}</p>
                     <p class="text-xs mt-1">
-                        <span class="text-slate-400">${p.Dienstgrad}</span> 
-                        <span class="text-green-600 font-bold mx-1">➔</span> 
-                        <span class="text-green-600 font-black">Beförderung zum ${p.promo.nextDG}</span>
+                        <span class="text-slate-400">${p.Dienstgrad}</span> ➔ <span class="text-green-600 font-black">Beförderung zum ${p.promo.nextDG}</span>
                     </p>
                 </div>`;
         });
@@ -131,69 +156,32 @@ function renderPersonal() {
     appData.personnel.forEach(p => { abteilungen[p.Abteilung] = (abteilungen[p.Abteilung] || 0) + 1; });
 
     statsDiv.innerHTML = `
-        <div class="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex-1">
             <p class="text-[10px] uppercase text-slate-400 font-bold">Gesamt</p>
             <p class="text-xl font-black text-red-700">${appData.personnel.length}</p>
         </div>
-        <div class="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+        <div class="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex-[2]">
             <p class="text-[10px] uppercase text-slate-400 font-bold">Abteilungen</p>
-            <p class="text-[9px] font-medium leading-tight text-slate-600 dark:text-slate-300">
-                ${Object.entries(abteilungen).map(([n, v]) => `${n}: ${v}`).join(' | ')}
-            </p>
+            <p class="text-[9px] font-medium text-slate-600 dark:text-slate-300">${Object.entries(abteilungen).map(([n, v]) => `${n}: ${v}`).join(' | ')}</p>
         </div>`;
 
     appData.personnel
-    .map((p, originalIndex) => ({ ...p, originalIndex })) 
-    .sort((a, b) => a.Name.localeCompare(b.Name))
-    .forEach((p) => {
-        const promo = checkPromotionStatus(p);
-        list.innerHTML += `
-            <div data-index="${p.originalIndex}" onclick="showDetails(${p.originalIndex})" class="member-item bg-white dark:bg-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-sm mb-2 border-l-4 ${promo.isFällig ? 'border-orange-500 bg-orange-50/20' : 'border-transparent'} active:scale-95 transition-all cursor-pointer">
-                <div class="flex-1">
-                    <p class="font-bold text-sm text-slate-800 dark:text-white">
-                        ${p.Name}, ${p.Vorname} ${p.PersNr ? `(${p.PersNr})` : ''} 
-                        ${promo.isFällig ? `<span class="ml-2 text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full shadow-sm">BEFÖRDERN</span>` : ''}
-                    </p>
-                    <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">${p.Abteilung} | ${p.Dienstgrad}</p>
-                </div>
-                <span class="text-red-700 text-lg opacity-30">➔</span>
-            </div>`;
-    });
-}
-
-function checkPromotionStatus(p) {
-    const rules = appData.promoRules.filter(r => r.Vorheriger_DG === p.Dienstgrad);
-    let status = { isFällig: false, nextDG: "", missing: [] };
-    if (rules.length === 0) return status;
-
-    const rule = rules[0]; 
-    status.nextDG = rule.Ziel_DG_Kurz;
-
-    const stichtag = AppUtils.parseDate(appData.stichtag);
-    const letzteBef = AppUtils.parseDate(p.Letzte_Befoerderung);
-    
-    // 1. Zeitprüfung (bleibt gleich)
-    let zeitOK = false;
-    if (letzteBef) {
-        const jahre = (stichtag - letzteBef) / (1000 * 60 * 60 * 24 * 365.25);
-        zeitOK = jahre >= parseFloat(rule.Wartezeit_Jahre);
-    }
-
-    // --- AB HIER AUSTAUSCHEN (Prüfung 2) ---
-    const geforderterLehrgang = rule.Notwendiger_Lehrgang ? rule.Notwendiger_Lehrgang.trim() : "";
-    const zellInhalt = p[geforderterLehrgang] ? p[geforderterLehrgang].toString().trim() : "";
-    const lehrgangOK = !geforderterLehrgang || (zellInhalt !== "" && zellInhalt !== "-");
-    // --- BIS HIERHIN ---
-
-    // Finaler Status-Check
-    if (zeitOK && lehrgangOK) {
-        status.isFällig = true;
-    } else {
-        if (!zeitOK) status.missing.push("Wartezeit noch nicht erfüllt");
-        if (!lehrgangOK) status.missing.push(`Lehrgang fehlt: ${geforderterLehrgang}`);
-    }
-
-    return status;
+        .map((p, originalIndex) => ({ ...p, originalIndex })) 
+        .sort((a, b) => a.Name.localeCompare(b.Name))
+        .forEach((p) => {
+            const promo = checkPromotionStatus(p);
+            list.innerHTML += `
+                <div data-index="${p.originalIndex}" onclick="showDetails(${p.originalIndex})" class="member-item bg-white dark:bg-slate-800 p-4 rounded-2xl flex justify-between items-center shadow-sm mb-2 border-l-4 ${promo.isFällig ? 'border-orange-500 bg-orange-50/20' : 'border-transparent'} active:scale-95 transition-all cursor-pointer">
+                    <div class="flex-1">
+                        <p class="font-bold text-sm text-slate-800 dark:text-white">
+                            ${p.Name}, ${p.Vorname} ${p.PersNr ? `(${p.PersNr})` : ''} 
+                            ${promo.isFällig ? `<span class="ml-2 text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full">BEFÖRDERN</span>` : ''}
+                        </p>
+                        <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">${p.Abteilung} | ${p.Dienstgrad}</p>
+                    </div>
+                    <span class="text-red-700 text-lg opacity-30">➔</span>
+                </div>`;
+        });
 }
 
 function showDetails(index) {
@@ -209,70 +197,28 @@ function showDetails(index) {
         <h2 class="text-2xl font-black">${p.Name}, ${p.Vorname} ${p.PersNr ? `<span class="text-slate-400 font-medium">(${p.PersNr})</span>` : ''}</h2>
         <p class="text-red-700 font-bold">${p.Abteilung} • ${p.Dienstgrad}</p>
     </div>
-    
     <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
         <div class="grid grid-cols-2 gap-3">
             <a href="tel:${cleanPhone}" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-slate-100 dark:bg-slate-700 p-4 rounded-2xl font-bold gap-2 active:scale-95 transition">📞 Anrufen</a>
             <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold gap-2 active:scale-95 transition">💬 WhatsApp</a>
         </div>
-
         <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
             <p class="text-[10px] uppercase font-bold text-slate-400 mb-1 tracking-widest">Anschrift</p>
-            <div class="flex justify-between items-center">
-                <p class="text-xs font-medium leading-relaxed">${p.Adresse || 'Keine Adresse hinterlegt'}</p>
-                ${p.Adresse ? `<a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.Adresse)}" target="_blank" class="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-xl active:scale-90 transition">📍 Karte</a>` : ''}
-            </div>
+            <p class="text-xs font-medium">${p.Adresse || 'Keine Adresse hinterlegt'}</p>
         </div>
-
         <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-600 text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-700/50 border-l-4 border-slate-400'}">
-    <p class="text-[10px] uppercase font-bold ${promo.isFällig ? 'text-green-100' : 'text-slate-500'} tracking-wider">Status Beförderung</p>
-    ${promo.isFällig 
-        ? `<p class="text-lg font-black mt-1">Beförderung zum ${promo.nextDG} veranlassen!</p>
-           <p class="text-[10px] opacity-90 mt-1">✓ Wartezeit und Lehrgang erfolgreich abgeschlossen.</p>`
-        : `<p class="text-sm font-bold mt-1">Nächstes Ziel: <span class="text-red-700">${promo.nextDG || 'Endstufe erreicht'}</span></p>
-           ${promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2">⚠ ${promo.missing.join(', ')}</p>` : ''}`
-    }
-</div>
-
-        <div class="grid grid-cols-2 gap-2">
-            <div class="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                <p class="text-[10px] uppercase font-bold text-slate-400">Transponder</p>
-                <p class="text-xs font-mono font-bold">${p.Transponder || '---'}</p>
-            </div>
-            <div class="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-                <p class="text-[10px] uppercase font-bold text-slate-400">DME-Nr.</p>
-                <p class="text-xs font-mono font-bold">${p.DME || '---'}</p>
-            </div>
+            <p class="text-[10px] uppercase font-bold ${promo.isFällig ? 'text-green-100' : 'text-slate-500'} tracking-wider">Status Beförderung</p>
+            ${promo.isFällig 
+                ? `<p class="text-lg font-black mt-1">Beförderung zum ${promo.nextDG} veranlassen!</p>`
+                : `<p class="text-sm font-bold mt-1">Nächstes Ziel: <span class="text-red-700">${promo.nextDG || 'Endstufe erreicht'}</span></p>
+                   ${promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2">⚠ ${promo.missing.join(', ')}</p>` : ''}`
+            }
         </div>
-
-        <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl">
-            <div class="space-y-2">
-                <div>
-                    <p class="text-slate-400 uppercase font-bold">Geburtstag</p>
-                    <p class="font-medium">${AppUtils.formatDate(p.Geburtstag)}</p>
-                </div>
-                <div>
-                    <p class="text-slate-400 uppercase font-bold">Eintritt</p>
-                    <p class="font-medium">${AppUtils.formatDate(p.Eintritt)}</p>
-                </div>
-            </div>
-            <div class="flex flex-col justify-between ${dz.isJubilaeum ? 'ring-2 ring-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 rounded p-1' : ''}">
-                <div>
-                    <p class="text-slate-400 uppercase font-bold">Letzte Beförderung</p>
-                    <p class="font-medium">${AppUtils.formatDate(p.Letzte_Befoerderung)}</p>
-                </div>
-                <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <p class="text-slate-400 uppercase font-bold">Dienstzeit ${dz.isJubilaeum ? '🎖️' : ''}</p>
-                    <p class="font-black text-red-700 text-sm">${dz.text}</p>
-                </div>
-            </div>
-        </div>
-
         <div class="bg-white dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700">
             <p class="text-[10px] uppercase font-bold text-slate-400 mb-3 tracking-widest">Ausbildungsstand</p>
             <div class="grid grid-cols-1 gap-2">
                 ${lehrgangsListe.map(lg => {
-                    const hat = (p[lg] !== undefined && p[lg] !== null && p[lg] !== "");
+                    const hat = (p[lg] && p[lg].toString().trim() !== "");
                     return `<div class="flex items-center justify-between text-xs py-1 border-b border-slate-50 dark:border-slate-700 last:border-0">
                         <span class="${hat ? 'font-bold text-slate-800 dark:text-white' : 'text-slate-300 dark:text-slate-600'}">${lg}</span>
                         <span>${hat ? '✅' : '🟣'}</span>
@@ -281,26 +227,16 @@ function showDetails(index) {
             </div>
         </div>
     </div>`;
-
     document.getElementById('member-modal').classList.remove('hidden');
 }
+
 function filterPersonal() {
     const searchTerm = document.getElementById('search').value.toLowerCase();
-    const items = document.querySelectorAll('.member-item');
-
-    items.forEach(item => {
-        const idx = item.getAttribute('data-index');
-        const p = appData.personnel[idx];
-        
-        // Such-Pool aus allen wichtigen Feldern erstellen
-        const searchPool = [
-            p.Name, p.Vorname, p.PersNr, p.Abteilung, 
-            p.Dienstgrad, p.Transponder, p.DME
-        ].map(v => (v || "").toString().toLowerCase()).join(' ');
-
+    document.querySelectorAll('.member-item').forEach(item => {
+        const p = appData.personnel[item.getAttribute('data-index')];
+        const searchPool = `${p.Name} ${p.Vorname} ${p.PersNr} ${p.Abteilung} ${p.Dienstgrad}`.toLowerCase();
         item.style.display = searchPool.includes(searchTerm) ? 'flex' : 'none';
     });
 }
 function closeDetails() { document.getElementById('member-modal').classList.add('hidden'); }
-
 function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
