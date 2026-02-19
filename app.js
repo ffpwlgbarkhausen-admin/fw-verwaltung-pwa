@@ -46,11 +46,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function fetchData() {
     try {
-        const response = await fetch(`${API_URL}?action=read`);
+        // Zeitstempel verhindert, dass das Handy alte (gecashte) Daten anzeigt
+        const response = await fetch(`${API_URL}?action=read&_=${new Date().getTime()}`);
         appData = await response.json();
+        
+        // Initialisierung der Benutzeroberfläche
         initUI();
     } catch (e) {
-        console.error("API Fehler:", e);
+        console.error("API Fehler beim Laden:", e);
+        // Hier könnte man dem User eine Fehlermeldung im UI anzeigen
     }
 }
 
