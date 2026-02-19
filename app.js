@@ -393,24 +393,54 @@ function filterPersonal() {
 }
 function closeDetails() { document.getElementById('member-modal').classList.add('hidden'); }
 function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
-function updateStichtag() {
+async function updateStichtag() {
     const input = document.getElementById('stichtag-input');
+    // Wir greifen uns den Button, um ihm Feedback zu geben
+    const btn = event.target; 
+    
     if(!input || !input.value) return;
 
-    // 1. Neuen Stichtag in State übernehmen
-    appData.stichtag = input.value;
-    
-    // 2. Zeitstempel generieren
-    const jetzt = new Date();
-    appData.lastSaved = jetzt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + " Uhr";
-
-    // 3. UI komplett neu berechnen
-    renderDashboard();
-    renderPersonal();
-    
-    // Kleines Feedback-Highlight
-    const btn = event.target;
+    // 1. Visuelles Feedback: Button sperren während des Speicherns
     const originalText = btn.innerText;
-    btn.innerText = "✓ OK";
-    setTimeout(() => btn.innerText = originalText, 2000);
+    btn.innerText = "⌛...";
+    btn.disabled = true;
+
+    try {
+        // 2. Den Befehl an die Google API senden
+        // Wir übermitteln 'update_stichtag' und das Datum aus dem Input-Feld
+        const saveUrl = `${API_URL}?action=update_stichtag&date=${input.value}`;
+        
+        const response = await fetch(saveUrl);
+        const result = await response.json();
+
+        if(result.success) {
+            // 3. Nur wenn Google "OK" sagt, übernehmen wir es in die App
+            appData.stichtag = input.value;
+            
+            const jetzt = new Date();
+            appData.lastSaved = jetzt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + " Uhr";
+
+            // Alles neu zeichnen
+            renderDashboard();
+            renderPersonal();
+
+            // Erfolgs-Feedback
+            btn.innerText = "✅ OK";
+            btn.classList.replace('bg-red-700', 'bg-green-600');
+        } else {
+            throw new Error(result.error || "Fehler beim Speichern");
+        }
+    } catch (e) {
+        console.error("API Fehler:", e);
+        btn.innerText = "❌ FEHLER";
+        alert("Konnte nicht speichern. Ist das Internet an?");
+    } finally {
+        // Nach 2 Sekunden den Button wieder in den Normalzustand versetzen
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+            btn.classList.remove('bg-green-600');
+            if(!btn.classList.contains('bg-red-700')) btn.classList.add('bg-red-700');
+        }, 2000);
+    }
 }
