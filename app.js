@@ -162,33 +162,30 @@ function renderPersonal() {
 }
 
 function checkPromotionStatus(p) {
-    // Findet die Regel für den aktuellen Dienstgrad
     const rules = appData.promoRules.filter(r => r.Vorheriger_DG === p.Dienstgrad);
     let status = { isFällig: false, nextDG: "", missing: [] };
-    
     if (rules.length === 0) return status;
 
-    // Wir nehmen die erste passende Regel
     const rule = rules[0]; 
-    status.nextDG = rule.Ziel_DG_Kurz; // Ziel setzen wir sofort fest!
+    status.nextDG = rule.Ziel_DG_Kurz;
 
     const stichtag = AppUtils.parseDate(appData.stichtag);
     const letzteBef = AppUtils.parseDate(p.Letzte_Befoerderung);
     
-    // Zeitprüfung
+    // 1. Zeitprüfung (bleibt gleich)
     let zeitOK = false;
     if (letzteBef) {
         const jahre = (stichtag - letzteBef) / (1000 * 60 * 60 * 24 * 365.25);
         zeitOK = jahre >= parseFloat(rule.Wartezeit_Jahre);
-    } else {
-        status.missing.push("Datum letzte Beförderung fehlt");
     }
 
-    // Lehrgangsprüfung
-    const geforderterLehrgang = rule.Notwendiger_Lehrgang;
-    const lehrgangOK = !geforderterLehrgang || (p[geforderterLehrgang] !== undefined && p[geforderterLehrgang] !== "" && p[geforderterLehrgang] !== null);
+    // --- AB HIER AUSTAUSCHEN (Prüfung 2) ---
+    const geforderterLehrgang = rule.Notwendiger_Lehrgang ? rule.Notwendiger_Lehrgang.trim() : "";
+    const zellInhalt = p[geforderterLehrgang] ? p[geforderterLehrgang].toString().trim() : "";
+    const lehrgangOK = !geforderterLehrgang || (zellInhalt !== "" && zellInhalt !== "-");
+    // --- BIS HIERHIN ---
 
-    // Finaler Status
+    // Finaler Status-Check
     if (zeitOK && lehrgangOK) {
         status.isFällig = true;
     } else {
