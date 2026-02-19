@@ -23,7 +23,7 @@ const AppUtils = {
         const eintritt = AppUtils.parseDate(eintrittInput);
         if (!eintritt) return { text: '-', isJubilaeum: false, jahre: 0 };
 
-        const stichtag = AppUtils.parseDate(appData.stichtag) || new Date();
+        const stichtag = AppUtils.parseDate(document.getElementById('stichtag-input')?.value) || AppUtils.parseDate(appData.stichtag) || new Date();
         let jahre = stichtag.getFullYear() - eintritt.getFullYear();
         const m = stichtag.getMonth() - eintritt.getMonth();
         if (m < 0 || (m === 0 && stichtag.getDate() < eintritt.getDate())) jahre--;
@@ -133,9 +133,15 @@ function renderDashboard() {
     const list = document.getElementById('promo-list');
     if(!list) return;
     
-    // 1. ZUERST: Die Steuerung für den Stichtag aufbauen
-    // Wir nutzen appData.stichtag als Standardwert für das Input-Feld
-    const currentStichtagISO = AppUtils.parseDate(appData.stichtag).toISOString().split('T')[0];
+    let currentStichtagISO = "";
+    const raw = appData.stichtag.trim();
+    
+    if(raw.includes('.')) {
+        const p = raw.split('.');
+        currentStichtagISO = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+    } else {
+        currentStichtagISO = raw;
+    }
 
     list.innerHTML = `
         <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-8">
