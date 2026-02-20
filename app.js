@@ -472,16 +472,17 @@ function handleGesture() {
 
 // Hilfsfunktion, die showView aufruft UND die Icons unten färbt
 function showViewWithNav(name) {
+    // 1. Die eigentliche Ansicht umschalten
     showView(name);
     
-    // Alle Nav-Buttons suchen
-    const navButtons = document.querySelectorAll('nav button');
-    navButtons.forEach(btn => {
-        const label = btn.querySelector('span:last-child').innerText.toLowerCase();
-        if (label === name) {
-            btn.classList.replace('text-slate-400', 'text-red-700');
+    // 2. Die Icons unten einfärben
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        if (btn.getAttribute('data-view') === name) {
+            btn.classList.remove('text-slate-400');
+            btn.classList.add('text-red-700');
         } else {
-            btn.classList.replace('text-red-700', 'text-slate-400');
+            btn.classList.remove('text-red-700');
+            btn.classList.add('text-slate-400');
         }
     });
 }
