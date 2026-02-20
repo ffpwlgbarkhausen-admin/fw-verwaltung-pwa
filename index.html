@@ -30,13 +30,19 @@
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen pb-20 transition-colors duration-300">
 
   <header class="bg-red-700 text-white p-4 shadow-lg sticky top-0 z-50">
-    <div class="container mx-auto flex justify-between items-center">
-        <div>
-            <h1 id="header-title" class="font-bold text-lg italic leading-none">LG13 PRO</h1>
-            <p id="sync-status" class="text-[9px] uppercase font-black opacity-70 mt-1">Lade Daten...</p>
-        </div>
-        <button onclick="toggleDarkMode()" class="p-2 bg-red-800 rounded-lg">🌙</button>
+  <div class="container mx-auto flex justify-between items-center">
+    <div>
+      <h1 id="header-title" class="font-bold text-lg italic leading-none">LG13 PRO</h1>
+      <p id="sync-status" class="text-[9px] uppercase font-black opacity-70 mt-1 text-red-100">Synchronisiere...</p>
     </div>
+
+    <button onclick="toggleDarkMode()" class="focus:outline-none active:scale-90 transition-transform">
+      <img id="darkmode-logo" 
+           src="feuerwehr-logo.png" 
+           alt="Darkmode Switch" 
+           class="w-10 h-10 object-contain drop-shadow-md grayscale-0 transition-all duration-300">
+    </button>
+  </div>
 </header>
 
   <main class="container mx-auto p-4">
