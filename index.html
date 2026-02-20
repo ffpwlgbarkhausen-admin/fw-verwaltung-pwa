@@ -57,9 +57,13 @@
 </main>
 
   <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 p-4 flex justify-around z-50">
-    <button onclick="showViewWithNav('home')" class="flex flex-col items-center text-red-700"><span>🏠</span><span class="text-[10px] font-bold">Home</span></button>
-    <button onclick="showViewWithNav('personal')" class="flex flex-col items-center text-slate-400"><span>👥</span><span class="text-[10px] font-bold">Personal</span></button>
-  </nav>
+  <button onclick="showViewWithNav('home')" class="nav-btn flex flex-col items-center text-red-700" data-view="home">
+    <span>🏠</span><span class="text-[10px] font-bold">Home</span>
+  </button>
+  <button onclick="showViewWithNav('personal')" class="nav-btn flex flex-col items-center text-slate-400" data-view="personal">
+    <span>👥</span><span class="text-[10px] font-bold">Personal</span>
+  </button>
+</nav>
 
   <script src="app.js"></script>
   <div id="member-modal" class="hidden fixed inset-0 z-[60] bg-slate-900/90 backdrop-blur-sm flex items-end sm:items-center justify-center transition-all">
