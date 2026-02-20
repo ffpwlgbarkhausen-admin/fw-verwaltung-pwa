@@ -444,3 +444,54 @@ async function updateStichtag() {
         }, 2000);
     }
 }
+// --- 4. GESTENSTEUERUNG (SWIPE) ---
+let touchstartX = 0;
+let touchendX = 0;
+
+function handleGesture() {
+    const threshold = 100; // Mindestweg für einen Wisch
+    const distance = touchendX - touchstartX;
+
+    // A. Modal-Check: Wenn offen, schließt Wisch nach rechts das Modal
+    const modal = document.getElementById('member-modal');
+    if (modal && !modal.classList.contains('hidden')) {
+        if (distance > threshold) closeDetails();
+        return; 
+    }
+
+    // B. Haupt-Navigation: Zwischen Ansichten wischen
+    // Wisch nach links (distance negativ) -> Zu Personal
+    if (distance < -threshold) {
+        showViewWithNav('personal');
+    }
+    // Wisch nach rechts (distance positiv) -> Zu Home
+    if (distance > threshold) {
+        showViewWithNav('home');
+    }
+}
+
+// Hilfsfunktion, die showView aufruft UND die Icons unten färbt
+function showViewWithNav(name) {
+    showView(name);
+    
+    // Alle Nav-Buttons suchen
+    const navButtons = document.querySelectorAll('nav button');
+    navButtons.forEach(btn => {
+        const label = btn.querySelector('span:last-child').innerText.toLowerCase();
+        if (label === name) {
+            btn.classList.replace('text-slate-400', 'text-red-700');
+        } else {
+            btn.classList.replace('text-red-700', 'text-slate-400');
+        }
+    });
+}
+
+// Event-Listener registrieren
+document.addEventListener('touchstart', e => {
+    touchstartX = e.changedTouches[0].screenX;
+}, {passive: true});
+
+document.addEventListener('touchend', e => {
+    touchendX = e.changedTouches[0].screenX;
+    handleGesture();
+}, {passive: true});
