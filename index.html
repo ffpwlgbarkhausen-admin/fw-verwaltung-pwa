@@ -8,9 +8,23 @@
   <title>LG13 PRO | PWA</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* Verhindert das blaue Aufleuchten beim Klicken auf dem Handy */
     * { -webkit-tap-highlight-color: transparent; }
+
+    /* Die neue Gesten-Bremse für echtes App-Feeling */
+    body { 
+      overscroll-behavior-y: contain; 
+      touch-action: pan-y; 
+    }
+
+    /* Deine Ansichten-Steuerung */
     .view { display: none; }
     .view.active { display: block; }
+    
+    /* Optional: Damit das Modal beim Wischen nicht mit dem Hintergrund kämpft */
+    #member-modal {
+      touch-action: auto;
+    }
   </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 min-h-screen pb-20 transition-colors duration-300">
