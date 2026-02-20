@@ -1,20 +1,23 @@
 {
   "short_name": "LG13 PRO",
   "name": "LG13 Personalverwaltung",
+  "description": "Personal- und Beförderungsmanagement LG13",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#b91c1c",
+  "background_color": "#ffffff",
   "icons": [
     {
       "src": "feuerwehr-logo.png",
       "sizes": "192x192",
-      "type": "image/jpeg"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "feuerwehr-logo.png",
       "sizes": "512x512",
-      "type": "image/jpeg"
+      "type": "image/png"
     }
-  ],
-  "start_url": "index.html",
-  "display": "standalone",
-  "theme_color": "#b91c1c",
-  "background_color": "#ffffff"
+  ]
 }
