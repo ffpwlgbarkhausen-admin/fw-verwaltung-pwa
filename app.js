@@ -523,3 +523,21 @@ document.addEventListener('touchend', e => {
     touchendX = e.changedTouches[0].screenX;
     handleGesture();
 }, {passive: true});
+
+function toggleDarkMode() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    const logo = document.getElementById('darkmode-logo');
+    
+    if (logo) {
+        if (isDark) {
+            // Im Darkmode: Logo bekommt einen hellen Schein oder wird etwas kräftiger
+            logo.style.filter = "drop-shadow(0 0 5px rgba(255, 255, 255, 0.5))";
+        } else {
+            // Im Lightmode: Normaler Schatten
+            logo.style.filter = "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))";
+        }
+    }
+    
+    // Einstellung für den nächsten Start merken
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
