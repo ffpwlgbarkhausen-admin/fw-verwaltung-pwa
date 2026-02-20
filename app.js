@@ -45,16 +45,43 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function fetchData() {
+    const statusEl = document.getElementById('sync-status');
+    
+    // 1. SCHNELLER START: Daten aus dem Cache laden
+    const cached = localStorage.getItem('appDataCache');
+    const cachedTime = localStorage.getItem('lastCacheTime');
+
+    if (cached) {
+        appData = JSON.parse(cached);
+        if (statusEl) statusEl.innerText = `Stand: ${cachedTime} (Offline)`;
+        initUI(); // App ist sofort bedienbar!
+    }
+
+    // 2. HINTERGRUND-UPDATE: Frisch von Google holen
     try {
-        // Zeitstempel verhindert, dass das Handy alte (gecashte) Daten anzeigt
-        const response = await fetch(`${API_URL}?action=read&_=${new Date().getTime()}`);
-        appData = await response.json();
+        if (statusEl) statusEl.innerText = "🔄 Synchronisiere...";
         
-        // Initialisierung der Benutzeroberfläche
+        const response = await fetch(`${API_URL}?action=read&_=${new Date().getTime()}`);
+        const freshData = await response.json();
+
+        // Zeitstempel generieren
+        const nun = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+        // Im Cache speichern für das nächste Mal
+        localStorage.setItem('appDataCache', JSON.stringify(freshData));
+        localStorage.setItem('lastCacheTime', nun);
+
+        // Daten austauschen und UI lautlos aktualisieren
+        appData = freshData;
         initUI();
+
+        if (statusEl) {
+            statusEl.innerText = `● Aktuell: ${nun} Uhr`;
+            statusEl.classList.add('text-green-300'); // Kurzes optisches Signal
+        }
     } catch (e) {
-        console.error("API Fehler beim Laden:", e);
-        // Hier könnte man dem User eine Fehlermeldung im UI anzeigen
+        console.error("API Fehler:", e);
+        if (statusEl) statusEl.innerText = "⚠️ Offline-Modus";
     }
 }
 
