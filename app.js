@@ -153,7 +153,7 @@ function showView(name) {
     const targetView = document.getElementById(`view-${name}`);
     if(targetView) targetView.classList.add('active');
     const title = document.getElementById('header-title');
-    if(title) title.innerText = name === 'home' ? 'LG13 PRO' : 'PERSONALVERWALTUNG';
+    if(title) title.innerText = name === 'home' ? 'Feuerwehrverwaltung LG13' : 'PERSONALVERWALTUNG';
 }
 
 function renderDashboard() {
