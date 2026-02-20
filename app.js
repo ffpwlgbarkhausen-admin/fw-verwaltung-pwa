@@ -541,3 +541,9 @@ function toggleDarkMode() {
     // Einstellung für den nächsten Start merken
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
 }
+// Service Worker registrieren für PWA-Installation
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('Service Worker registriert'))
+      .catch(err => console.log('Service Worker Fehler', err));
+}
