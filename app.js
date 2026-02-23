@@ -358,7 +358,7 @@ function showDetails(index) {
     const lehrgangsListe = ["Probezeit", "Grundausbildung", "Truppführer", "Gruppenführer", "Zugführer", "Verbandsführer 1", "Verbandsführer 2"];
 
     // NEU: Logik für Ehrenzeichen-Button
-    const ehrungSchonErhalten = (p.Ehrenzeichen && p.Ehrenzeichen.includes(dz.jahre.toString()));
+    const ehrungSchonErhalten = (p.Ehrenzeichen && p.Ehrenzeichen.toString().includes(dz.jahre.toString()));
     const zeigeEhrungsButton = dz.isJubilaeum && !ehrungSchonErhalten;
 
     content.innerHTML = `
