@@ -172,7 +172,7 @@ function renderDashboard() {
 
     list.innerHTML = `
         <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 mb-8">
-            <p class="text-[10px] uppercase text-slate-400 font-black tracking-widest mb-3 text-center">Simulation: Stichtag anpassen</p>
+            <p class="text-[10px] uppercase text-slate-400 font-black tracking-widest mb-3 text-center">Hier Stichtag anpassen</p>
             <div class="flex flex-col gap-3">
                 <div class="flex gap-2">
                     <input type="date" id="stichtag-input" value="${currentStichtagISO}"
