@@ -212,5 +212,74 @@ function closeDetails() {
     document.getElementById('member-modal').classList.add('hidden');
 }
 
-// ... Hier folgen dann im nächsten Schritt die restlichen Funktionen (Beförderungs-Logik, Save-Funktionen)
+/** --- RESTLICHE LOGIK (SPEICHERN & PRÜFUNG) --- **/
+
+function checkPromotionStatus(p) {
+    const dz = AppUtils.getDienstzeit(p.Eintritt, p.Pausen_Jahre);
+    const rules = appData.promoRules.find(r => r.grad === p.Dienstgrad);
+    if (!rules) return { isFällig: false, nextDG: "Endstufe", missing: [] };
+
+    const missing = [];
+    if (dz.jahre < rules.jahre) missing.push(`${rules.jahre - dz.jahre} Jahre fehlen`);
+    
+    // Lehrgänge aus CONFIG prüfen
+    rules.lehrgaenge.forEach(l => {
+        if (!p[l] || p[l].toString().trim() === "") missing.push(`Lehrgang ${l}`);
+    });
+
+    return {
+        isFällig: missing.length === 0,
+        nextDG: rules.next,
+        missing: missing
+    };
+}
+
+async function updateStichtag() {
+    const val = document.getElementById('stichtag-input').value;
+    if(!val) return;
+    try {
+        const resp = await fetch(`${CONFIG.API_URL}?action=update_stichtag&date=${val}`);
+        const res = await resp.json();
+        if(res.success) {
+            const info = document.getElementById('last-saved-info');
+            if(info) info.innerText = "✅ Stichtag im Sheet gespeichert!";
+            await fetchData();
+        }
+    } catch(e) { alert("Fehler beim Speichern!"); }
+}
+
+function showJubileeConfirm(index, type) {
+    const p = appData.personnel[index];
+    const content = document.getElementById('modal-content');
+    content.innerHTML = `
+        <div class="bg-amber-50 dark:bg-slate-900 border-2 border-amber-600 p-6 rounded-3xl shadow-2xl">
+            <h3 class="text-amber-800 dark:text-amber-400 font-black text-xl mb-2 uppercase text-center">🎖️ Ehrung bestätigen</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-300 mb-6 text-center">Wann hat <b>${p.Vorname} ${p.Name}</b> die Urkunde für <b>${type}</b> erhalten?</p>
+            <input type="date" id="jubilee-date-input" class="w-full p-4 rounded-2xl border-2 border-amber-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold mb-6 text-lg text-slate-900 dark:text-white" value="${new Date().toISOString().split('T')[0]}">
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="showDetails(${index})" class="bg-slate-200 dark:bg-slate-700 p-4 rounded-2xl font-black uppercase text-xs">❌ Abbrechen</button>
+                <button id="confirm-jubilee-btn" onclick="executeJubilee('${p.PersNr}', '${type}', ${index})" class="bg-amber-600 text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg">💾 Speichern</button>
+            </div>
+        </div>`;
+}
+
+async function executeJubilee(persNr, type, index) {
+    const dateInput = document.getElementById('jubilee-date-input');
+    const btn = document.getElementById('confirm-jubilee-btn');
+    if(!dateInput || !dateInput.value) return;
+
+    const nurZahl = type.toString().replace(/[^0-9]/g, '');
+    btn.innerText = "⌛...";
+    btn.disabled = true;
+
+    try {
+        const resp = await fetch(`${CONFIG.API_URL}?action=confirm_jubilee&persNr=${persNr}&jubileeType=${nurZahl}&date=${dateInput.value}`);
+        const res = await resp.json();
+        if(res.success) {
+            btn.innerHTML = "✅ GESPEICHERT";
+            await fetchData(); 
+            setTimeout(() => showDetails(index), 1000);
+        }
+    } catch (e) { alert("Fehler!"); btn.disabled = false; }
+}
 window.onload = fetchData;
