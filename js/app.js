@@ -4,7 +4,6 @@
  */
 
 // --- 1. KONFIGURATION & STATE ---
-const API_URL = "https://script.google.com/macros/s/AKfycbyja4HWHpmuwWTuZBEXTOFGns8-xb1S4ppSUc2xXWcJ8SdBmfkUZQUlSa-z-ypqK6jW/exec"; 
 
 const CONFIG = {
     API_URL: API_URL,
