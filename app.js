@@ -551,3 +551,68 @@ if ('serviceWorker' in navigator) {
       .then(reg => console.log('Service Worker registriert'))
       .catch(err => console.log('Service Worker Fehler', err));
 }
+
+// --- 5. BEFÖRDERUNGS-LOGIK (NEU) ---
+
+function showPromotionConfirm(index, zielDG) {
+    const p = appData.personnel[index];
+    const content = document.getElementById('modal-content');
+    
+    // Wir rendern einen Bestätigungs-Dialog direkt in das Modal
+    content.innerHTML = `
+    <div class="bg-green-50 dark:bg-slate-900 border-2 border-green-600 p-6 rounded-3xl shadow-2xl transition-all">
+        <h3 class="text-green-800 dark:text-green-400 font-black text-xl mb-2 uppercase">Beförderung bestätigen</h3>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-6">
+            Du beförderst <b>${p.Vorname} ${p.Name}</b> zum <b>${zielDG}</b>.<br>
+            Wann wurde die Urkunde übergeben?
+        </p>
+        
+        <input type="date" id="promo-date-input" 
+               class="w-full p-4 rounded-2xl border-2 border-green-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold mb-6 text-lg outline-none focus:border-green-600 transition-all text-slate-900 dark:text-white"
+               value="${new Date().toISOString().split('T')[0]}">
+
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="showDetails(${index})" 
+                    class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 p-4 rounded-2xl font-black uppercase text-xs active:scale-95 transition-all">
+                ❌ Abbrechen
+            </button>
+            <button id="confirm-promo-btn" onclick="executePromotion('${p.PersNr}', '${zielDG}', ${index})" 
+                    class="bg-green-600 text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 transition-all">
+                🚀 Speichern
+            </button>
+        </div>
+    </div>
+    `;
+}
+
+async function executePromotion(persNr, zielDG, index) {
+    const dateInput = document.getElementById('promo-date-input');
+    const btn = document.getElementById('confirm-promo-btn');
+    if(!dateInput || !dateInput.value) return;
+
+    const datum = dateInput.value;
+    btn.innerText = "⌛...";
+    btn.disabled = true;
+
+    try {
+        // Wir senden action=promote_member mit Dienstgrad UND Datum
+        const saveUrl = `${API_URL}?action=promote_member&persNr=${persNr}&newDG=${zielDG}&newDate=${datum}`;
+        const response = await fetch(saveUrl);
+        const result = await response.json();
+
+        if(result.success) {
+            btn.innerText = "✅ ERFOLG";
+            // Daten neu laden, damit die App den neuen Stand kennt
+            await fetchData(); 
+            // Modal nach kurzem Moment schließen
+            setTimeout(closeDetails, 1000);
+        } else {
+            throw new Error("Google-Fehler");
+        }
+    } catch (e) {
+        console.error("Fehler:", e);
+        alert("Fehler beim Speichern! Bitte Internetverbindung und Google Script prüfen.");
+        btn.innerText = "🚀 Speichern";
+        btn.disabled = false;
+    }
+}
