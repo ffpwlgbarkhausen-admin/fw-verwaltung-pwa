@@ -198,28 +198,51 @@ function renderDashboard() {
         </div>
     `;
 
-    // 2. JUBILÄEN
+    // --- 2. JUBILÄEN LOGIK (NACHHOL-LOGIK) ---
+    const messlatten = [25, 35, 40, 50, 60, 70, 75, 80];
+
     const jubilare = appData.personnel
-        .map(p => ({ ...p, dz: AppUtils.getDienstzeit(p.Eintritt, p.Pausen_Jahre) }))
-        .filter(p => p.dz.isJubilaeum);
+        .map((p, idx) => {
+            const dz = AppUtils.getDienstzeit(p.Eintritt, p.Pausen_Jahre);
+            // Welches ist das höchste Jubiläum, das diese Person bereits erreicht hat?
+            const erreichtesJubiläum = [...messlatten].reverse().find(m => m <= dz.jahre);
+            
+            // Prüfen, ob dieses Jubiläum schon in der Spalte "Ehrenzeichen" steht
+            const bereitsEingetragen = erreichtesJubiläum && p.Ehrenzeichen && 
+                                      p.Ehrenzeichen.toString().includes(erreichtesJubiläum.toString());
+
+            return { 
+                ...p, 
+                dz, 
+                originalIndex: idx, 
+                faellig: erreichtesJubiläum, 
+                anzeigen: erreichtesJubiläum && !bereitsEingetragen 
+            };
+        })
+        .filter(p => p.anzeigen);
 
     if(jubilare.length > 0) {
         list.innerHTML += `<h3 class="text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest flex items-center gap-2">
-            <span class="w-8 h-[1px] bg-slate-200"></span> 🎖️ Jubiläen
+            <span class="w-8 h-[1px] bg-slate-200"></span> 🎖️ Offene Ehrungen
         </h3>`;
         
         jubilare.forEach(j => {
             list.innerHTML += `
-                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border-l-4 border-amber-400 mb-3 ring-1 ring-slate-200 dark:ring-slate-700">
-                    <p class="font-black text-sm dark:text-white">${j.Name}, ${j.Vorname}</p>
-                    <p class="text-xs mt-1">
-                        <span class="text-amber-600 font-black">🎖️ ${j.dz.jahre} Jahre Dienstzeit</span>
-                    </p>
+                <div onclick="showDetails(${j.originalIndex})" class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border-l-4 border-amber-400 mb-3 active:scale-95 transition-all cursor-pointer ring-1 ring-slate-200 dark:ring-slate-700">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-black text-sm dark:text-white">${j.Name}, ${j.Vorname}</p>
+                            <p class="text-[10px] text-slate-400">Dienstzeit: ${j.dz.jahre} Jahre</p>
+                        </div>
+                        <span class="bg-amber-100 text-amber-700 text-[10px] font-black px-2 py-1 rounded-lg">
+                            ${j.faellig} J. FÄLLIG
+                        </span>
+                    </div>
                 </div>`;
         });
     }
 
-    // 3. BEFÖRDERUNGEN
+    // --- 3. BEFÖRDERUNGEN ---
     const bereit = appData.personnel
         .map((p, idx) => ({ ...p, promo: checkPromotionStatus(p), originalIndex: idx }))
         .filter(p => p.promo.isFällig);
@@ -239,7 +262,7 @@ function renderDashboard() {
                 </div>`;
         });
     } else {
-        list.innerHTML += `<div class="text-center py-6 border-2 border-dashed border-slate-100 rounded-3xl text-slate-300 text-xs italic">Keine Ereignisse fällig.</div>`;
+        list.innerHTML += `<div class="text-center py-6 border-2 border-dashed border-slate-100 rounded-3xl text-slate-300 text-[10px] italic font-medium">Keine Beförderungen fällig.</div>`;
     }
 }
 
