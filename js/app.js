@@ -211,21 +211,46 @@ function filterPersonal() {
 
 // --- 5. LOGIK (PRÜFUNG & API) ---
 function checkPromotionStatus(p) {
-    const dz = AppUtils.getDienstzeit(p.Eintritt, p.Pausen_Jahre);
-    const rules = appData.promoRules.find(r => r.Vorheriger_DG?.trim() === p.Dienstgrad?.trim());
+    // 1. Die entscheidende Zeit für Beförderungen ist das Datum der letzten Beförderung
+    // Falls das Feld leer ist, nehmen wir als Fallback den Eintritt
+    const basisDatum = p.Letzte_Befoerderung || p.Eintritt;
+    const letzteBef = AppUtils.parseDate(basisDatum);
     
+    if (!letzteBef) return { isFällig: false, nextDG: "Daten fehlen" };
+
+    // 2. Regel für den aktuellen Dienstgrad (OBM) finden
+    const rules = appData.promoRules.find(r => r.Vorheriger_DG?.trim() === p.Dienstgrad?.trim());
     if (!rules) return { isFällig: false, nextDG: "Endstufe" };
 
-    const missing = [];
-    const wartezeit = parseFloat(rules.Wartezeit_Jahre) || 0;
-    if (dz.jahre < wartezeit) missing.push("Zeit");
+    // 3. Zeit seit der letzten Beförderung berechnen
+    const stichtagInput = document.getElementById('stichtag-input')?.value;
+    const heute = stichtagInput ? new Date(stichtagInput) : new Date();
     
-    const gefordert = rules.Notwendiger_Lehrgang?.trim();
-    if (gefordert && (!p[gefordert] || p[gefordert].toString().trim() === "" || p[gefordert] === "-")) {
-        missing.push("Lehrgang");
+    let jahreSeitLetzterBef = heute.getFullYear() - letzteBef.getFullYear();
+    if (heute < new Date(heute.getFullYear(), letzteBef.getMonth(), letzteBef.getDate())) {
+        jahreSeitLetzterBef--;
     }
 
-    return { isFällig: missing.length === 0, nextDG: rules.Ziel_DG_Kurz };
+    const missing = [];
+    
+    // 4. Prüfung der Wartezeit (z.B. 3 oder 4 Jahre für HBM)
+    const erforderlicheJahre = parseFloat(rules.Wartezeit_Jahre) || 0;
+    if (jahreSeitLetzterBef < erforderlicheJahre) {
+        missing.push(`Wartezeit: ${jahreSeitLetzterBef.toFixed(1)}/${erforderlicheJahre} J.`);
+    }
+    
+    // 5. Prüfung der Lehrgänge (wie bisher)
+    const gefordert = rules.Notwendiger_Lehrgang?.trim();
+    if (gefordert && gefordert !== "" && gefordert !== "-") {
+        const hatLehrgang = (p[gefordert] && p[gefordert].toString().trim() !== "" && p[gefordert] !== "-");
+        if (!hatLehrgang) missing.push(`Lehrgang: ${gefordert}`);
+    }
+
+    return { 
+        isFällig: missing.length === 0, 
+        nextDG: rules.Ziel_DG_Kurz,
+        reasons: missing 
+    };
 }
 
 async function updateStichtag() {
