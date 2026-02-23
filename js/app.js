@@ -191,37 +191,41 @@ function showDetails(index) {
     <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
         ${zeigeEhrungsAktion ? `
             <div onclick="showJubileeConfirm(${index}, '${fälligesJubiläum} Jahre')" 
-                 class="bg-amber-500 p-5 rounded-3xl shadow-lg text-white active:scale-95 transition-all cursor-pointer border-b-4 border-amber-700">
+                 class="bg-amber-500 p-5 rounded-3xl shadow-lg shadow-amber-900/20 mb-4 text-white active:scale-95 transition-all cursor-pointer border-b-4 border-amber-700">
                 <p class="text-[10px] font-black uppercase tracking-widest text-amber-100 opacity-80">⚡ Aktion erforderlich</p>
                 <p class="text-lg font-black mt-1">Ehrung zum ${fälligesJubiläum}-jährigen Jubiläum!</p>
+                <p class="text-[10px] mt-1 underline decoration-amber-300">Hier klicken, um Datum zu wählen & zu speichern</p>
             </div>
         ` : ''}
 
-        <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-600 text-white shadow-lg cursor-pointer active:scale-95' : 'bg-slate-50 dark:bg-slate-900/50 border-l-4 border-slate-400'}">
+        <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-600 text-white shadow-lg cursor-pointer active:scale-95 transition-all' : 'bg-slate-50 dark:bg-slate-900/50 border-l-4 border-slate-400'}">
             <p class="text-[10px] uppercase font-bold ${promo.isFällig ? 'text-green-100' : 'text-slate-500'} tracking-wider">
                 ${promo.isFällig ? '⚡ Aktion erforderlich' : 'Status Beförderung'}
             </p>
             ${promo.isFällig 
                 ? `<div onclick="showPromotionConfirm(${index}, '${promo.nextDG}')">
-                     <p class="text-lg font-black mt-1">Beförderung zum ${promo.nextDG}!</p>
+                     <p class="text-lg font-black mt-1">Beförderung zum ${promo.nextDG} veranlassen!</p>
+                     <p class="text-[10px] opacity-90 mt-1 underline text-white">Hier klicken zum Bestätigen & Datum wählen</p>
                    </div>`
-                : `<p class="text-sm font-bold mt-1 dark:text-white">Nächstes Ziel: <span class="text-red-700">${promo.nextDG || 'Endstufe'}</span></p>
+                : `<p class="text-sm font-bold mt-1 dark:text-white">Nächstes Ziel: <span class="text-red-700">${promo.nextDG || 'Endstufe erreicht'}</span></p>
                    ${promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2">⚠ ${promo.missing.join(', ')}</p>` : ''}`
             }
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-            <a href="tel:${cleanPhone}" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-slate-100 dark:bg-slate-700 p-4 rounded-2xl font-bold dark:text-white active:scale-95 transition">📞 Anrufen</a>
-            <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold active:scale-95 transition">💬 WhatsApp</a>
+            <a href="tel:${cleanPhone}" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-slate-100 dark:bg-slate-700 p-4 rounded-2xl font-bold gap-2 text-xs active:scale-95 transition dark:text-white">📞 Anrufen</a>
+            <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold gap-2 text-xs active:scale-95 transition">💬 WhatsApp</a>
         </div>
 
         <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
             <div class="space-y-3">
-                <div><p class="text-slate-400 uppercase font-bold">Geburtstag</p><p class="font-bold text-sm dark:text-white">${AppUtils.formatDate(p.Geburtstag)}</p></div>
-                <div><p class="text-slate-400 uppercase font-bold">Eintritt</p><p class="font-bold text-sm dark:text-white">${AppUtils.formatDate(p.Eintritt)}</p></div>
+                <div><p class="text-slate-400 uppercase font-bold tracking-tight">Geburtstag</p><p class="font-bold text-sm dark:text-white">${AppUtils.formatDate(p.Geburtstag)}</p></div>
+                <div><p class="text-slate-400 uppercase font-bold tracking-tight">Eintritt</p><p class="font-bold text-sm dark:text-white">${AppUtils.formatDate(p.Eintritt)}</p></div>
             </div>
-            <div class="flex flex-col justify-between p-2 rounded-xl bg-white/50 dark:bg-slate-800/50">
-                <div><p class="text-slate-400 uppercase font-bold">Dienstzeit</p><p class="font-black text-red-700 text-base">${dz.text}</p></div>
+            <div onclick="${zeigeEhrungsAktion ? `showJubileeConfirm(${index}, '${fälligesJubiläum} Jahre')` : ''}" 
+                 class="flex flex-col justify-between p-2 rounded-xl transition-all ${zeigeEhrungsAktion ? 'bg-amber-500 text-white shadow-lg cursor-pointer active:scale-95 ring-2 ring-amber-300' : 'bg-white/50 dark:bg-slate-800/50'}">
+                <div><p class="${zeigeEhrungsAktion ? 'text-amber-100' : 'text-slate-400'} uppercase font-bold tracking-tight">Ehrenzeichen</p><p class="font-bold text-sm ${zeigeEhrungsAktion ? 'text-white' : 'dark:text-white'}">${p.Ehrenzeichen || 'Keines'}</p></div>
+                <div class="mt-2 pt-2 border-t ${zeigeEhrungsAktion ? 'border-amber-400' : 'border-slate-200 dark:border-slate-700'}"><p class="${zeigeEhrungsAktion ? 'text-amber-100' : 'text-slate-400'} uppercase font-bold tracking-tight">Dienstzeit</p><p class="font-black ${zeigeEhrungsAktion ? 'text-white' : 'text-red-700'} text-base">${dz.text}</p></div>
             </div>
         </div>
 
@@ -230,8 +234,7 @@ function showDetails(index) {
             <div class="grid grid-cols-1 gap-2">
                 ${CONFIG.LEHRGAENGE.map(lg => {
                     const hat = (p[lg] && p[lg].toString().trim() !== "" && p[lg].toString().trim() !== "-");
-                    return `
-                    <div class="flex items-center justify-between text-xs py-1 border-b border-slate-50 dark:border-slate-700 last:border-0">
+                    return `<div class="flex items-center justify-between text-xs py-1 border-b border-slate-50 dark:border-slate-700 last:border-0">
                         <span class="${hat ? 'font-bold text-slate-800 dark:text-white' : 'text-slate-300 dark:text-slate-600'}">${lg}</span>
                         <span>${hat ? '✅' : '🟣'}</span>
                     </div>`;
@@ -239,6 +242,8 @@ function showDetails(index) {
             </div>
         </div>
     </div>`;
+
+    // Modal am Ende anzeigen
     document.getElementById('member-modal').classList.remove('hidden');
 }
 
