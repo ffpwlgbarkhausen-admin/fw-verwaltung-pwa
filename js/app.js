@@ -255,7 +255,7 @@ function filterPersonal() {
 // --- 5. LOGIK (PRÜFUNG & SPEICHERN) ---
 function checkPromotionStatus(p) {
     const dz = AppUtils.getDienstzeit(p.Eintritt, p.Pausen_Jahre);
-    const rules = appData.promoRules.find(r => r.Vorheriger_DG.trim() === p.Dienstgrad.trim());
+    const rules = appData.promoRules.find(r => r.Vorheriger_DG && r.Vorheriger_DG.trim() === p.Dienstgrad.trim());
     if (!rules) return { isFällig: false, nextDG: "Endstufe", missing: [] };
 
     const missing = [];
