@@ -200,7 +200,7 @@ function renderDashboard() {
 
     // 2. JUBILÄEN
     const jubilare = appData.personnel
-        .map(p => ({ ...p, dz: AppUtils.getDienstzeit(p.Eintritt) }))
+        .map(p => ({ ...p, dz: AppUtils.getDienstzeit(p.Eintritt, p.Pausen_Jahre) }))
         .filter(p => p.dz.isJubilaeum);
 
     if(jubilare.length > 0) {
