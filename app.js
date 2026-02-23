@@ -728,20 +728,22 @@ async function executeJubilee(persNr, type, index) {
     const btn = document.getElementById('confirm-jubilee-btn');
     if(!dateInput || !dateInput.value) return;
 
+    // Extrahiert nur die Zahl aus "25 Jahre" -> "25"
+    const nurZahl = type.toString().replace(/[^0-9]/g, '');
     const datum = dateInput.value;
+    
     btn.innerText = "⌛...";
     btn.disabled = true;
 
     try {
-        // Wir nutzen die neue Action 'confirm_jubilee'
-        const saveUrl = `${API_URL}?action=confirm_jubilee&persNr=${persNr}&jubileeType=${type}&date=${datum}`;
+        // Übergabe der gesäuberten Zahl an die API
+        const saveUrl = `${API_URL}?action=confirm_jubilee&persNr=${persNr}&jubileeType=${nurZahl}&date=${datum}`;
         const response = await fetch(saveUrl);
         const result = await response.json();
 
         if(result.success) {
-            btn.innerText = "✅ ERFOLG";
+            btn.innerHTML = "✅ GESPEICHERT";
             await fetchData(); 
-            // Wir springen zurück in die Details, um die aktualisierte Historie zu sehen
             setTimeout(() => showDetails(index), 1000);
         } else {
             throw new Error("Fehler beim Speichern");
