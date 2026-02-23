@@ -296,7 +296,7 @@ function renderPersonal() {
         .sort((a, b) => a.Name.localeCompare(b.Name))
         .forEach((p) => {
             const promo = checkPromotionStatus(p);
-            const dz = AppUtils.getDienstzeit(p.Eintritt);
+            const dz = AppUtils.getDienstzeit(p.Eintritt, p.Pausen_Jahre);
 
             let zeitInfo = "";
             const rule = appData.promoRules.find(r => r.Vorheriger_DG.trim() === p.Dienstgrad.trim());
