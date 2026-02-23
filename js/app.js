@@ -1,73 +1,21 @@
 /**
  * HAUPTDATEI: App-Logik & UI-Steuerung
- * Alle Module integriert: Dashboard, Personal, Details & API-Anbindung
  */
 
-// --- 1. KONFIGURATION & STATE ---
-
-const CONFIG = {
-    API_URL: API_URL,
-    JUBILAEEN: [10, 25, 40, 50, 60, 70],
-    LEHRGAENGE: [
-        "Grundausbildung", 
-        "Truppführer", 
-        "Gruppenführer", 
-        "Zugführer", 
-        "Verbandsführer 1", 
-        "Verbandsführer 2"]
-};
-
+// --- 1. STATE ---
 let appData = { personnel: [], stichtag: new Date(), promoRules: [] };
 
-// --- 2. HILFSFUNKTIONEN (DATENVERARBEITUNG) ---
-const AppUtils = {
-    parseDate: (str) => {
-        if (!str || str === '-') return null;
-        if (str instanceof Date) return str;
-        let d = new Date(str);
-        // Fix für deutsches Format (DD.MM.YYYY)
-        if (isNaN(d.getTime()) && typeof str === 'string' && str.includes('.')) {
-            const p = str.split('.');
-            d = new Date(p[2], p[1] - 1, p[0]);
-        }
-        return isNaN(d.getTime()) ? null : d;
-    },
-
-    formatDate: (dateInput) => {
-        const d = AppUtils.parseDate(dateInput);
-        return d ? d.toLocaleDateString('de-DE') : '-';
-    },
-
-    getDienstzeit: (eintrittInput, pausenInput) => {
-        const eintritt = AppUtils.parseDate(eintrittInput);
-        if (!eintritt) return { text: '-', jahre: 0 };
-        
-        const heute = new Date();
-        let jahre = heute.getFullYear() - eintritt.getFullYear();
-        const m = heute.getMonth() - eintritt.getMonth();
-        if (m < 0 || (m === 0 && heute.getDate() < eintritt.getDate())) {
-            jahre--;
-        }
-        
-        const pause = parseFloat(pausenInput) || 0;
-        const nettoJahre = jahre - pause;
-        
-        return {
-            text: `${nettoJahre.toFixed(1)} J.`,
-            jahre: nettoJahre
-        };
-    }
-};
-
-// --- 3. DATEN LADEN ---
+// --- 2. DATEN LADEN ---
 async function fetchData() {
     const status = document.getElementById('sync-status');
     const loader = document.getElementById('loader');
     if(status) status.innerText = "Synchronisiere...";
     
     try {
-        const response = await fetch(CONFIG.API_URL);
+        // Der Parameter ?action=read ist zwingend für das Google Script
+        const response = await fetch(CONFIG.API_URL + "?action=read");
         const text = await response.text();
+        
         try {
             appData = JSON.parse(text);
         } catch(e) {
@@ -85,12 +33,11 @@ async function fetchData() {
     }
 }
 
-// --- 4. RENDERING: DASHBOARD ---
+// --- 3. RENDERING: DASHBOARD ---
 function renderDashboard() {
     const list = document.getElementById('promo-list');
     if(!list) return;
     
-    // Stichtag für Input-Feld vorbereiten
     let currentStichtagISO = "";
     const raw = (appData.stichtag || "").toString().trim();
     if(raw.includes('.')) {
@@ -119,7 +66,6 @@ function renderDashboard() {
         </div>
     `;
 
-    // 4a. Jubiläen berechnen & anzeigen
     const jubilare = (appData.personnel || [])
         .map((p, idx) => {
             const dz = AppUtils.getDienstzeit(p.Eintritt, p.Pausen_Jahre);
@@ -146,7 +92,6 @@ function renderDashboard() {
         });
     }
 
-    // 4b. Beförderungen berechnen & anzeigen
     const bereit = (appData.personnel || [])
         .map((p, idx) => ({ ...p, promo: checkPromotionStatus(p), originalIndex: idx }))
         .filter(p => p.promo.isFällig);
@@ -168,8 +113,7 @@ function renderDashboard() {
     }
 }
 
-// --- 5. DETAILANSICHT ---
-// --- 5. DETAILANSICHT ---
+// --- 4. DETAILANSICHT ---
 function showDetails(index) {
     const p = appData.personnel[index];
     const promo = checkPromotionStatus(p);
@@ -242,11 +186,10 @@ function showDetails(index) {
         </div>
     </div>`;
 
-    // Modal am Ende anzeigen
     document.getElementById('member-modal').classList.remove('hidden');
 }
 
-// --- 6. NAVIGATION & PERSONAL-LISTE ---
+// --- 5. NAVIGATION & PERSONAL-LISTE ---
 function showViewWithNav(viewId) {
     document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
     document.getElementById(`view-${viewId}`).classList.remove('hidden');
@@ -267,7 +210,7 @@ function renderPersonalList() {
 function closeDetails() { document.getElementById('member-modal').classList.add('hidden'); }
 function toggleDarkMode() { document.documentElement.classList.toggle('dark'); }
 
-// --- 7. LOGIK (PRÜFUNG & SPEICHERN) ---
+// --- 6. LOGIK (PRÜFUNG & SPEICHERN) ---
 function checkPromotionStatus(p) {
     const dz = AppUtils.getDienstzeit(p.Eintritt, p.Pausen_Jahre);
     const rules = appData.promoRules.find(r => r.Vorheriger_DG?.trim() === p.Dienstgrad?.trim());
@@ -285,7 +228,16 @@ function checkPromotionStatus(p) {
     return { isFällig: missing.length === 0, nextDG: rules.Ziel_DG_Kurz, missing: missing };
 }
 
-// Speicher-Aktionen
+async function updateStichtag() {
+    const input = document.getElementById('stichtag-input');
+    if(!input || !input.value) return;
+    try {
+        const resp = await fetch(`${CONFIG.API_URL}?action=update_stichtag&date=${input.value}`);
+        const res = await resp.json();
+        if(res.success) fetchData();
+    } catch(e) { alert("Fehler beim Speichern!"); }
+}
+
 async function executeJubilee(persNr, type, index) {
     const dateInput = document.getElementById('jubilee-date-input');
     if(!dateInput?.value) return;
@@ -307,7 +259,6 @@ async function executePromotion(persNr, zielDG, index) {
     } catch (e) { alert("Fehler!"); }
 }
 
-// Modal-Helfer für Bestätigungen
 function showJubileeConfirm(index, type) {
     const p = appData.personnel[index];
     const content = document.getElementById('modal-content');
