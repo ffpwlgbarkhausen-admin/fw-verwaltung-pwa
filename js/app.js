@@ -9,7 +9,13 @@ const API_URL = "https://script.google.com/macros/s/AKfycbyja4HWHpmuwWTuZBEXTOFG
 const CONFIG = {
     API_URL: API_URL,
     JUBILAEEN: [10, 25, 40, 50, 60, 70],
-    LEHRGAENGE: ["TM1", "TM2", "Sprechfunker", "Atemschutz", "Maschinist", "Truppfuehrer", "Gruppenfuehrer"]
+    LEHRGAENGE: [
+        "Grundausbildung", 
+        "Truppführer", 
+        "Gruppenführer", 
+        "Zugführer", 
+        "Verbandsführer 1", 
+        "Verbandsführer 2"]
 };
 
 let appData = { personnel: [], stichtag: new Date(), promoRules: [] };
