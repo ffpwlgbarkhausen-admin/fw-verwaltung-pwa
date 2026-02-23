@@ -360,15 +360,19 @@ function showDetails(index) {
             <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold gap-2 active:scale-95 transition">💬 WhatsApp</a>
         </div>
 
-        <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-600 text-white shadow-lg' : 'bg-slate-50 dark:bg-slate-900/50 border-l-4 border-slate-400'}">
-            <p class="text-[10px] uppercase font-bold ${promo.isFällig ? 'text-green-100' : 'text-slate-500'} tracking-wider">Status Beförderung</p>
-            ${promo.isFällig 
-                ? `<p class="text-lg font-black mt-1">Beförderung zum ${promo.nextDG} veranlassen!</p>
-                   <p class="text-[10px] opacity-90 mt-1">✓ Wartezeit und Lehrgang erfolgreich abgeschlossen.</p>`
-                : `<p class="text-sm font-bold mt-1 dark:text-white">Nächstes Ziel: <span class="text-red-700">${promo.nextDG || 'Endstufe erreicht'}</span></p>
-                   ${promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2">⚠ ${promo.missing.join(', ')}</p>` : ''}`
-            }
-        </div>
+        <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-600 text-white shadow-lg cursor-pointer active:scale-95 transition-all' : 'bg-slate-50 dark:bg-slate-900/50 border-l-4 border-slate-400'}">
+    <p class="text-[10px] uppercase font-bold ${promo.isFällig ? 'text-green-100' : 'text-slate-500'} tracking-wider">
+        ${promo.isFällig ? '⚡ Aktion erforderlich' : 'Status Beförderung'}
+    </p>
+    ${promo.isFällig 
+        ? `<div onclick="showPromotionConfirm(${index}, '${promo.nextDG}')">
+             <p class="text-lg font-black mt-1">Beförderung zum ${promo.nextDG} veranlassen!</p>
+             <p class="text-[10px] opacity-90 mt-1 underline">Hier klicken zum Bestätigen & Datum wählen</p>
+           </div>`
+        : `<p class="text-sm font-bold mt-1 dark:text-white">Nächstes Ziel: <span class="text-red-700">${promo.nextDG || 'Endstufe erreicht'}</span></p>
+           ${promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2">⚠ ${promo.missing.join(', ')}</p>` : ''}`
+    }
+</div>
 
         <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
             <div class="space-y-3">
