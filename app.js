@@ -19,23 +19,32 @@ const AppUtils = {
         return d ? d.toLocaleDateString('de-DE') : '-';
     },
 
-    getDienstzeit: (eintrittInput) => {
-        const eintritt = AppUtils.parseDate(eintrittInput);
-        if (!eintritt) return { text: '-', isJubilaeum: false, jahre: 0 };
+    getDienstzeit: (eintrittInput, pausenInput) => {
+    const eintritt = AppUtils.parseDate(eintrittInput);
+    if (!eintritt) return { text: '-', isJubilaeum: false, jahre: 0 };
 
-        const stichtag = AppUtils.parseDate(document.getElementById('stichtag-input')?.value) || AppUtils.parseDate(appData.stichtag) || new Date();
-        let jahre = stichtag.getFullYear() - eintritt.getFullYear();
-        const m = stichtag.getMonth() - eintritt.getMonth();
-        if (m < 0 || (m === 0 && stichtag.getDate() < eintritt.getDate())) jahre--;
+    // 1. Pausen-Wert vorbereiten (aus dem Sheet kommt oft ein String oder undefined)
+    const pause = parseFloat(pausenInput) || 0;
 
-        const jahreAnzeige = jahre >= 0 ? jahre : 0;
-        const jubilaeen = [25, 35, 40, 50, 60, 70, 75, 80];
-        return { 
-            text: jahreAnzeige + " J.", 
-            isJubilaeum: jubilaeen.includes(jahreAnzeige),
-            jahre: jahreAnzeige
-        };
-    }
+    const stichtag = AppUtils.parseDate(document.getElementById('stichtag-input')?.value) || AppUtils.parseDate(appData.stichtag) || new Date();
+    
+    // 2. Kalenderjahre berechnen
+    let jahre = stichtag.getFullYear() - eintritt.getFullYear();
+    const m = stichtag.getMonth() - eintritt.getMonth();
+    if (m < 0 || (m === 0 && stichtag.getDate() < eintritt.getDate())) jahre--;
+
+    // 3. Abzug der Pausen (Effektive Dienstzeit)
+    const jahreAnzeige = (jahre - pause) >= 0 ? (jahre - pause) : 0;
+    
+    const jubilaeen = [25, 35, 40, 50, 60, 70, 75, 80];
+    
+    return { 
+        text: jahreAnzeige + " J.", 
+        isJubilaeum: jubilaeen.includes(jahreAnzeige),
+        jahre: jahreAnzeige,
+        nextJubileeText: jubilaeen.find(j => j > jahreAnzeige) + " Jahre" // Hilfreich für den Bestätigungs-Dialog
+    };
+}
 };
 
 // --- 2. CORE FUNKTIONEN ---
@@ -343,7 +352,7 @@ function renderPersonal() {
 function showDetails(index) {
     const p = appData.personnel[index];
     const promo = checkPromotionStatus(p);
-    const dz = AppUtils.getDienstzeit(p.Eintritt);
+    const dz = AppUtils.getDienstzeit(p.Eintritt, p.Pausen_Jahre);
     const content = document.getElementById('modal-content');
     const cleanPhone = p.Telefon ? p.Telefon.toString().replace(/\s+/g, '') : '';
     const lehrgangsListe = ["Probezeit", "Grundausbildung", "Truppführer", "Gruppenführer", "Zugführer", "Verbandsführer 1", "Verbandsführer 2"];
