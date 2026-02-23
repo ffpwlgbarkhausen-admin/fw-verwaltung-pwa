@@ -1,11 +1,59 @@
 /**
  * HAUPTDATEI: App-Logik & UI-Steuerung
+ * Stand: 2026-02-11 - Komplett integriert
  */
 
-// Globaler State
+// --- 1. KONFIGURATION & STATE ---
+const API_URL = "https://script.google.com/macros/s/AKfycbyja4HWHpmuwWTuZBEXTOFGns8-xb1S4ppSUc2xXWcJ8SdBmfkUZQUlSa-z-ypqK6jW/exec"; 
+
+const CONFIG = {
+    API_URL: API_URL,
+    JUBILAEEN: [10, 25, 40, 50, 60, 70],
+    LEHRGAENGE: ["TM1", "TM2", "Sprechfunker", "Atemschutz", "Maschinist", "Truppfuehrer", "Gruppenfuehrer"]
+};
+
 let appData = { personnel: [], stichtag: new Date(), promoRules: [] };
 
-// --- 1. DATEN-FUNKTIONEN ---
+// --- 2. HILFSFUNKTIONEN (AppUtils) ---
+const AppUtils = {
+    parseDate: (str) => {
+        if (!str || str === '-') return null;
+        if (str instanceof Date) return str;
+        let d = new Date(str);
+        if (isNaN(d.getTime()) && typeof str === 'string' && str.includes('.')) {
+            const p = str.split('.');
+            d = new Date(p[2], p[1] - 1, p[0]);
+        }
+        return isNaN(d.getTime()) ? null : d;
+    },
+
+    formatDate: (dateInput) => {
+        const d = AppUtils.parseDate(dateInput);
+        return d ? d.toLocaleDateString('de-DE') : '-';
+    },
+
+    getDienstzeit: (eintrittInput, pausenInput) => {
+        const eintritt = AppUtils.parseDate(eintrittInput);
+        if (!eintritt) return { text: '-', jahre: 0 };
+        
+        const heute = new Date();
+        let jahre = heute.getFullYear() - eintritt.getFullYear();
+        const m = heute.getMonth() - eintritt.getMonth();
+        if (m < 0 || (m === 0 && heute.getDate() < eintritt.getDate())) {
+            jahre--;
+        }
+        
+        const pause = parseFloat(pausenInput) || 0;
+        const nettoJahre = jahre - pause;
+        
+        return {
+            text: `${nettoJahre.toFixed(1)} J.`,
+            jahre: nettoJahre
+        };
+    }
+};
+
+// --- 3. DATEN-FUNKTIONEN ---
 async function fetchData() {
     const status = document.getElementById('sync-status');
     const loader = document.getElementById('loader');
@@ -13,7 +61,6 @@ async function fetchData() {
     
     try {
         const response = await fetch(CONFIG.API_URL);
-        // Prüfen, ob die Antwort wirklich JSON ist
         const text = await response.text();
         try {
             appData = JSON.parse(text);
@@ -32,7 +79,7 @@ async function fetchData() {
     }
 }
 
-// --- 2. DASHBOARD RENDERN ---
+// --- 4. UI-FUNKTIONEN (DASHBOARD & DETAILS) ---
 function renderDashboard() {
     const list = document.getElementById('promo-list');
     if(!list) return;
@@ -65,8 +112,8 @@ function renderDashboard() {
         </div>
     `;
 
-    // JUBILÄEN
-    const jubilare = appData.personnel
+    // JUBILÄEN RENDERN
+    const jubilare = (appData.personnel || [])
         .map((p, idx) => {
             const dz = AppUtils.getDienstzeit(p.Eintritt, p.Pausen_Jahre);
             const erreichtesJubiläum = [...CONFIG.JUBILAEEN].reverse().find(m => m <= dz.jahre);
@@ -96,8 +143,8 @@ function renderDashboard() {
         });
     }
 
-    // BEFÖRDERUNGEN
-    const bereit = appData.personnel
+    // BEFÖRDERUNGEN RENDERN
+    const bereit = (appData.personnel || [])
         .map((p, idx) => ({ ...p, promo: checkPromotionStatus(p), originalIndex: idx }))
         .filter(p => p.promo.isFällig);
 
@@ -120,7 +167,6 @@ function renderDashboard() {
     }
 }
 
-// --- 3. DETAILANSICHT ---
 function showDetails(index) {
     const p = appData.personnel[index];
     const promo = checkPromotionStatus(p);
@@ -195,11 +241,7 @@ function showDetails(index) {
     document.getElementById('member-modal').classList.remove('hidden');
 }
 
-// --- 4. NAVIGATION & TOOLS ---
-function toggleDarkMode() {
-    document.documentElement.classList.toggle('dark');
-}
-
+// --- 5. NAVIGATION & LISTEN ---
 function showViewWithNav(viewId) {
     document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
     document.getElementById(`view-${viewId}`).classList.remove('hidden');
@@ -212,10 +254,6 @@ function showViewWithNav(viewId) {
         }
     });
     if(viewId === 'personal') renderPersonalList();
-}
-
-function closeDetails() {
-    document.getElementById('member-modal').classList.add('hidden');
 }
 
 function renderPersonalList() {
@@ -242,17 +280,15 @@ function renderPersonalList() {
     `).join('');
 }
 
-function filterPersonal() {
-    const query = document.getElementById('search').value.toLowerCase();
-    const cards = document.getElementById('member-list').children;
-    
-    appData.personnel.forEach((p, idx) => {
-        const match = p.Name.toLowerCase().includes(query) || p.Vorname.toLowerCase().includes(query);
-        if(cards[idx]) cards[idx].style.display = match ? 'flex' : 'none';
-    });
+function closeDetails() {
+    document.getElementById('member-modal').classList.add('hidden');
 }
 
-// --- 5. LOGIK (PRÜFUNG & SPEICHERN) ---
+function toggleDarkMode() {
+    document.documentElement.classList.toggle('dark');
+}
+
+// --- 6. BUSINESS-LOGIK & API-SCHREIBEN ---
 function checkPromotionStatus(p) {
     const dz = AppUtils.getDienstzeit(p.Eintritt, p.Pausen_Jahre);
     const rules = appData.promoRules.find(r => r.Vorheriger_DG && r.Vorheriger_DG.trim() === p.Dienstgrad.trim());
@@ -298,7 +334,7 @@ function showJubileeConfirm(index, type) {
             <input type="date" id="jubilee-date-input" class="w-full p-4 rounded-2xl border-2 border-amber-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold mb-6 text-lg text-slate-900 dark:text-white" value="${new Date().toISOString().split('T')[0]}">
             <div class="grid grid-cols-2 gap-4">
                 <button onclick="showDetails(${index})" class="bg-slate-200 dark:bg-slate-700 p-4 rounded-2xl font-black uppercase text-xs">❌ Abbrechen</button>
-                <button id="confirm-jubilee-btn" onclick="executeJubilee('${p.PersNr}', '${type}', ${index})" class="bg-amber-600 text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg">💾 Speichern</button>
+                <button id="confirm-jubilee-btn" onclick="executeJubilee('${p.PersNr}', '${type}', ${index})" class="bg-amber-600 text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95">💾 Speichern</button>
             </div>
         </div>`;
 }
@@ -333,7 +369,7 @@ function showPromotionConfirm(index, nextDG) {
         <input type="date" id="promo-date-input" class="w-full p-4 rounded-2xl border-2 border-green-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold mb-6 text-lg text-slate-900 dark:text-white" value="${new Date().toISOString().split('T')[0]}">
         <div class="grid grid-cols-2 gap-4">
             <button onclick="showDetails(${index})" class="bg-slate-200 dark:bg-slate-700 p-4 rounded-2xl font-black uppercase text-xs">❌ Abbrechen</button>
-            <button id="confirm-promo-btn" onclick="executePromotion('${p.PersNr}', '${nextDG}', ${index})" class="bg-green-600 text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg">🚀 Speichern</button>
+            <button id="confirm-promo-btn" onclick="executePromotion('${p.PersNr}', '${nextDG}', ${index})" class="bg-green-600 text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95">🚀 Speichern</button>
         </div>
     </div>`;
 }
