@@ -357,6 +357,10 @@ function showDetails(index) {
     const cleanPhone = p.Telefon ? p.Telefon.toString().replace(/\s+/g, '') : '';
     const lehrgangsListe = ["Probezeit", "Grundausbildung", "Truppführer", "Gruppenführer", "Zugführer", "Verbandsführer 1", "Verbandsführer 2"];
 
+    // NEU: Logik für Ehrenzeichen-Button
+    const ehrungSchonErhalten = (p.Ehrenzeichen && p.Ehrenzeichen.includes(dz.jahre.toString()));
+    const zeigeEhrungsButton = dz.isJubilaeum && !ehrungSchonErhalten;
+
     content.innerHTML = `
     <div class="mb-6">
         <h2 class="text-2xl font-black dark:text-white">${p.Name}, ${p.Vorname} ${p.PersNr ? `<span class="text-slate-400 font-medium text-lg">(${p.PersNr})</span>` : ''}</h2>
@@ -370,18 +374,18 @@ function showDetails(index) {
         </div>
 
         <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-600 text-white shadow-lg cursor-pointer active:scale-95 transition-all' : 'bg-slate-50 dark:bg-slate-900/50 border-l-4 border-slate-400'}">
-    <p class="text-[10px] uppercase font-bold ${promo.isFällig ? 'text-green-100' : 'text-slate-500'} tracking-wider">
-        ${promo.isFällig ? '⚡ Aktion erforderlich' : 'Status Beförderung'}
-    </p>
-    ${promo.isFällig 
-        ? `<div onclick="showPromotionConfirm(${index}, '${promo.nextDG}')">
-             <p class="text-lg font-black mt-1">Beförderung zum ${promo.nextDG} veranlassen!</p>
-             <p class="text-[10px] opacity-90 mt-1 underline">Hier klicken zum Bestätigen & Datum wählen</p>
-           </div>`
-        : `<p class="text-sm font-bold mt-1 dark:text-white">Nächstes Ziel: <span class="text-red-700">${promo.nextDG || 'Endstufe erreicht'}</span></p>
-           ${promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2">⚠ ${promo.missing.join(', ')}</p>` : ''}`
-    }
-</div>
+            <p class="text-[10px] uppercase font-bold ${promo.isFällig ? 'text-green-100' : 'text-slate-500'} tracking-wider">
+                ${promo.isFällig ? '⚡ Aktion erforderlich' : 'Status Beförderung'}
+            </p>
+            ${promo.isFällig 
+                ? `<div onclick="showPromotionConfirm(${index}, '${promo.nextDG}')">
+                     <p class="text-lg font-black mt-1">Beförderung zum ${promo.nextDG} veranlassen!</p>
+                     <p class="text-[10px] opacity-90 mt-1 underline">Hier klicken zum Bestätigen & Datum wählen</p>
+                   </div>`
+                : `<p class="text-sm font-bold mt-1 dark:text-white">Nächstes Ziel: <span class="text-red-700">${promo.nextDG || 'Endstufe erreicht'}</span></p>
+                   ${promo.missing.length > 0 ? `<p class="text-red-600 text-[10px] font-bold mt-2">⚠ ${promo.missing.join(', ')}</p>` : ''}`
+            }
+        </div>
 
         <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
             <div class="space-y-3">
@@ -394,14 +398,17 @@ function showDetails(index) {
                     <p class="font-bold text-sm dark:text-white">${AppUtils.formatDate(p.Eintritt)}</p>
                 </div>
             </div>
-            <div class="flex flex-col justify-between p-2 rounded-xl ${dz.isJubilaeum ? 'bg-amber-100/50 ring-1 ring-amber-400' : 'bg-white/50 dark:bg-slate-800/50'}">
+
+            <div onclick="${zeigeEhrungsButton ? `showJubileeConfirm(${index}, '${dz.jahre} Jahre')` : ''}" 
+                 class="flex flex-col justify-between p-2 rounded-xl transition-all ${zeigeEhrungsButton ? 'bg-amber-500 text-white shadow-lg cursor-pointer active:scale-95 ring-2 ring-amber-300' : 'bg-white/50 dark:bg-slate-800/50'}">
                 <div>
-                    <p class="text-slate-400 uppercase font-bold tracking-tight">Letzte Beförderung</p>
-                    <p class="font-bold text-sm dark:text-white">${AppUtils.formatDate(p.Letzte_Befoerderung)}</p>
+                    <p class="${zeigeEhrungsButton ? 'text-amber-100' : 'text-slate-400'} uppercase font-bold tracking-tight">Ehrenzeichen</p>
+                    <p class="font-bold text-sm ${zeigeEhrungsButton ? 'text-white' : 'dark:text-white'}">${p.Ehrenzeichen || 'Keines'}</p>
                 </div>
-                <div class="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                    <p class="text-slate-400 uppercase font-bold tracking-tight">Dienstzeit ${dz.isJubilaeum ? '🎖️' : ''}</p>
-                    <p class="font-black text-red-700 text-base">${dz.text}</p>
+                <div class="mt-2 pt-2 border-t ${zeigeEhrungsButton ? 'border-amber-400' : 'border-slate-200 dark:border-slate-700'}">
+                    <p class="${zeigeEhrungsButton ? 'text-amber-100' : 'text-slate-400'} uppercase font-bold tracking-tight">Dienstzeit ${dz.isJubilaeum ? '🎖️' : ''}</p>
+                    <p class="font-black ${zeigeEhrungsButton ? 'text-white' : 'text-red-700'} text-base">${dz.text}</p>
+                    ${zeigeEhrungsButton ? '<p class="text-[8px] animate-pulse font-bold underline">Klick: Ehrung bestätigen</p>' : ''}
                 </div>
             </div>
         </div>
@@ -423,7 +430,7 @@ function showDetails(index) {
             <p class="text-[10px] uppercase font-bold text-slate-400 mb-3 tracking-widest text-center italic">Laufbahn / Historie</p>
             <div class="space-y-2">
                 ${p.Historie 
-                    ? p.Historie.split('|').reverse().map(e => { // .reverse() zeigt das Neueste oben!
+                    ? p.Historie.split('|').reverse().map(e => {
                         const parts = e.split(':');
                         const datum = parts[0] ? parts[0].trim() : "";
                         const grad = parts[1] ? parts[1].trim() : "";
@@ -439,11 +446,10 @@ function showDetails(index) {
                 }
             </div>
         </div>
-        </div>`; // Das hier ist das Ende der space-y-4 Sektion
+    </div>`;
 
     document.getElementById('member-modal').classList.remove('hidden');
 }
-
 function filterPersonal() {
     const searchTerm = document.getElementById('search').value.toLowerCase();
     document.querySelectorAll('.member-item').forEach(item => {
@@ -643,6 +649,72 @@ async function executePromotion(persNr, zielDG, index) {
         console.error("Fehler:", e);
         alert("Fehler beim Speichern! Bitte Internetverbindung und Google Script prüfen.");
         btn.innerText = "🚀 Speichern";
+        btn.disabled = false;
+    }
+}
+
+/**
+ * JUBILÄUM: Dialog zur Bestätigung der Ehrung
+ */
+function showJubileeConfirm(index, type) {
+    const p = appData.personnel[index];
+    const content = document.getElementById('modal-content');
+    
+    content.innerHTML = `
+    <div class="bg-amber-50 dark:bg-slate-900 border-2 border-amber-600 p-6 rounded-3xl shadow-2xl transition-all">
+        <h3 class="text-amber-800 dark:text-amber-400 font-black text-xl mb-2 uppercase text-center">🎖️ Ehrung bestätigen</h3>
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-6 text-center">
+            Wann hat <b>${p.Vorname} ${p.Name}</b> die Urkunde für <b>${type}</b> erhalten?
+        </p>
+        
+        <input type="date" id="jubilee-date-input" 
+               class="w-full p-4 rounded-2xl border-2 border-amber-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold mb-6 text-lg outline-none focus:border-amber-600 transition-all text-slate-900 dark:text-white"
+               value="${new Date().toISOString().split('T')[0]}">
+
+        <div class="grid grid-cols-2 gap-4">
+            <button onclick="showDetails(${index})" 
+                    class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 p-4 rounded-2xl font-black uppercase text-xs active:scale-95 transition-all">
+                ❌ Abbrechen
+            </button>
+            <button id="confirm-jubilee-btn" onclick="executeJubilee('${p.PersNr}', '${type}', ${index})" 
+                    class="bg-amber-600 text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg active:scale-95 transition-all">
+                💾 Speichern
+            </button>
+        </div>
+    </div>
+    `;
+}
+
+/**
+ * JUBILÄUM: Daten an Google Script senden
+ */
+async function executeJubilee(persNr, type, index) {
+    const dateInput = document.getElementById('jubilee-date-input');
+    const btn = document.getElementById('confirm-jubilee-btn');
+    if(!dateInput || !dateInput.value) return;
+
+    const datum = dateInput.value;
+    btn.innerText = "⌛...";
+    btn.disabled = true;
+
+    try {
+        // Wir nutzen die neue Action 'confirm_jubilee'
+        const saveUrl = `${API_URL}?action=confirm_jubilee&persNr=${persNr}&jubileeType=${type}&date=${datum}`;
+        const response = await fetch(saveUrl);
+        const result = await response.json();
+
+        if(result.success) {
+            btn.innerText = "✅ ERFOLG";
+            await fetchData(); 
+            // Wir springen zurück in die Details, um die aktualisierte Historie zu sehen
+            setTimeout(() => showDetails(index), 1000);
+        } else {
+            throw new Error("Fehler beim Speichern");
+        }
+    } catch (e) {
+        console.error("Fehler:", e);
+        alert("Fehler beim Speichern des Ehrenzeichens!");
+        btn.innerText = "💾 Speichern";
         btn.disabled = false;
     }
 }
