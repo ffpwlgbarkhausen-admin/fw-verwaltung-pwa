@@ -380,9 +380,12 @@ function showDetails(index) {
     const cleanPhone = p.Telefon ? p.Telefon.toString().replace(/\s+/g, '') : '';
     const lehrgangsListe = ["Probezeit", "Grundausbildung", "Truppführer", "Gruppenführer", "Zugführer", "Verbandsführer 1", "Verbandsführer 2"];
 
-    // NEU: Logik für Ehrenzeichen-Button
-    const ehrungSchonErhalten = (p.Ehrenzeichen && p.Ehrenzeichen.toString().includes(dz.jahre.toString()));
-    const zeigeEhrungsButton = dz.isJubilaeum && !ehrungSchonErhalten;
+    // --- LOGIK FÜR JUBILÄUM (NACHHOL-LOGIK) ---
+    const messlatten = [25, 35, 40, 50, 60, 70, 75, 80];
+    const fälligesJubiläum = [...messlatten].reverse().find(m => m <= dz.jahre);
+    const ehrungSchonErhalten = fälligesJubiläum && p.Ehrenzeichen && 
+                               p.Ehrenzeichen.toString().includes(fälligesJubiläum.toString());
+    const zeigeEhrungsAktion = fälligesJubiläum && !ehrungSchonErhalten;
 
     content.innerHTML = `
     <div class="mb-6">
@@ -391,10 +394,15 @@ function showDetails(index) {
     </div>
     
     <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-        <div class="grid grid-cols-2 gap-3">
-            <a href="tel:${cleanPhone}" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-slate-100 dark:bg-slate-700 p-4 rounded-2xl font-bold gap-2 active:scale-95 transition dark:text-white">📞 Anrufen</a>
-            <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold gap-2 active:scale-95 transition">💬 WhatsApp</a>
-        </div>
+        
+        ${zeigeEhrungsAktion ? `
+            <div onclick="showJubileeConfirm(${index}, '${fälligesJubiläum} Jahre')" 
+                 class="bg-amber-500 p-5 rounded-3xl shadow-lg shadow-amber-900/20 mb-4 text-white active:scale-95 transition-all cursor-pointer border-b-4 border-amber-700">
+                <p class="text-[10px] font-black uppercase tracking-widest text-amber-100 opacity-80">⚡ Aktion erforderlich</p>
+                <p class="text-lg font-black mt-1">Ehrung zum ${fälligesJubiläum}-jährigen Jubiläum!</p>
+                <p class="text-[10px] mt-1 underline decoration-amber-300">Hier klicken, um Datum zu wählen & zu speichern</p>
+            </div>
+        ` : ''}
 
         <div class="p-4 rounded-2xl ${promo.isFällig ? 'bg-green-600 text-white shadow-lg cursor-pointer active:scale-95 transition-all' : 'bg-slate-50 dark:bg-slate-900/50 border-l-4 border-slate-400'}">
             <p class="text-[10px] uppercase font-bold ${promo.isFällig ? 'text-green-100' : 'text-slate-500'} tracking-wider">
@@ -410,6 +418,11 @@ function showDetails(index) {
             }
         </div>
 
+        <div class="grid grid-cols-2 gap-3">
+            <a href="tel:${cleanPhone}" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-slate-100 dark:bg-slate-700 p-4 rounded-2xl font-bold gap-2 active:scale-95 transition dark:text-white text-xs">📞 Anrufen</a>
+            <a href="https://wa.me/${cleanPhone.replace('+', '').replace(/^00/, '')}" target="_blank" class="${p.Telefon ? 'flex' : 'hidden'} items-center justify-center bg-green-500 text-white p-4 rounded-2xl font-bold gap-2 active:scale-95 transition text-xs text-center">💬 WhatsApp</a>
+        </div>
+
         <div class="grid grid-cols-2 gap-2 text-[10px] bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
             <div class="space-y-3">
                 <div>
@@ -422,16 +435,15 @@ function showDetails(index) {
                 </div>
             </div>
 
-            <div onclick="${zeigeEhrungsButton ? `showJubileeConfirm(${index}, '${dz.jahre} Jahre')` : ''}" 
-                 class="flex flex-col justify-between p-2 rounded-xl transition-all ${zeigeEhrungsButton ? 'bg-amber-500 text-white shadow-lg cursor-pointer active:scale-95 ring-2 ring-amber-300' : 'bg-white/50 dark:bg-slate-800/50'}">
+            <div onclick="${zeigeEhrungsAktion ? `showJubileeConfirm(${index}, '${fälligesJubiläum} Jahre')` : ''}" 
+                 class="flex flex-col justify-between p-2 rounded-xl transition-all ${zeigeEhrungsAktion ? 'bg-amber-500 text-white shadow-lg cursor-pointer active:scale-95 ring-2 ring-amber-300' : 'bg-white/50 dark:bg-slate-800/50'}">
                 <div>
-                    <p class="${zeigeEhrungsButton ? 'text-amber-100' : 'text-slate-400'} uppercase font-bold tracking-tight">Ehrenzeichen</p>
-                    <p class="font-bold text-sm ${zeigeEhrungsButton ? 'text-white' : 'dark:text-white'}">${p.Ehrenzeichen || 'Keines'}</p>
+                    <p class="${zeigeEhrungsAktion ? 'text-amber-100' : 'text-slate-400'} uppercase font-bold tracking-tight">Ehrenzeichen</p>
+                    <p class="font-bold text-sm ${zeigeEhrungsAktion ? 'text-white' : 'dark:text-white'}">${p.Ehrenzeichen || 'Keines'}</p>
                 </div>
-                <div class="mt-2 pt-2 border-t ${zeigeEhrungsButton ? 'border-amber-400' : 'border-slate-200 dark:border-slate-700'}">
-                    <p class="${zeigeEhrungsButton ? 'text-amber-100' : 'text-slate-400'} uppercase font-bold tracking-tight">Dienstzeit ${dz.isJubilaeum ? '🎖️' : ''}</p>
-                    <p class="font-black ${zeigeEhrungsButton ? 'text-white' : 'text-red-700'} text-base">${dz.text}</p>
-                    ${zeigeEhrungsButton ? '<p class="text-[8px] animate-pulse font-bold underline">Klick: Ehrung bestätigen</p>' : ''}
+                <div class="mt-2 pt-2 border-t ${zeigeEhrungsAktion ? 'border-amber-400' : 'border-slate-200 dark:border-slate-700'}">
+                    <p class="${zeigeEhrungsAktion ? 'text-amber-100' : 'text-slate-400'} uppercase font-bold tracking-tight">Dienstzeit</p>
+                    <p class="font-black ${zeigeEhrungsAktion ? 'text-white' : 'text-red-700'} text-base">${dz.text}</p>
                 </div>
             </div>
         </div>
