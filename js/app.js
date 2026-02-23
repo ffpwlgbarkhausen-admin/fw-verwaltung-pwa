@@ -282,4 +282,56 @@ async function executeJubilee(persNr, type, index) {
         }
     } catch (e) { alert("Fehler!"); btn.disabled = false; }
 }
+// --- ERGÄNZUNG FÜR PERSONAL-LISTE ---
+
+function renderPersonalList() {
+    const list = document.getElementById('member-list');
+    const stats = document.getElementById('personal-stats');
+    if(!list) return;
+
+    // Einfache Statistik oben
+    const total = appData.personnel.length;
+    stats.innerHTML = `
+        <div class="bg-red-700 text-white p-6 rounded-3xl shadow-xl">
+            <p class="text-[10px] uppercase font-black opacity-60 tracking-widest">Gesamtstärke</p>
+            <h2 class="text-4xl font-black">${total} <span class="text-sm font-light opacity-80">Einsatzkräfte</span></h2>
+        </div>
+    `;
+
+    list.innerHTML = appData.personnel.map((p, idx) => `
+        <div onclick="showDetails(${idx})" class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex justify-between items-center active:scale-95 transition-all">
+            <div>
+                <p class="font-black text-sm dark:text-white">${p.Name}, ${p.Vorname}</p>
+                <p class="text-[10px] text-slate-400 uppercase font-bold">${p.Dienstgrad}</p>
+            </div>
+            <span class="text-xl">➔</span>
+        </div>
+    `).join('');
+}
+
+function filterPersonal() {
+    const query = document.getElementById('search').value.toLowerCase();
+    const cards = document.getElementById('member-list').children;
+    
+    appData.personnel.forEach((p, idx) => {
+        const match = p.Name.toLowerCase().includes(query) || p.Vorname.toLowerCase().includes(query);
+        cards[idx].style.display = match ? 'flex' : 'none';
+    });
+}
+
+// Falls du die Beförderung auch direkt bestätigen willst (wie im Code angedeutet):
+function showPromotionConfirm(index, nextDG) {
+    const p = appData.personnel[index];
+    const content = document.getElementById('modal-content');
+    content.innerHTML = `
+        <div class="bg-green-50 dark:bg-slate-900 border-2 border-green-600 p-6 rounded-3xl shadow-2xl">
+            <h3 class="text-green-800 dark:text-green-400 font-black text-xl mb-2 uppercase text-center">📋 Beförderung bestätigen</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-300 mb-6 text-center">Wann wurde <b>${p.Vorname} ${p.Name}</b> zum <b>${nextDG}</b> befördert?</p>
+            <input type="date" id="promo-date-input" class="w-full p-4 rounded-2xl border-2 border-green-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold mb-6 text-lg text-slate-900 dark:text-white" value="${new Date().toISOString().split('T')[0]}">
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="showDetails(${index})" class="bg-slate-200 dark:bg-slate-700 p-4 rounded-2xl font-black uppercase text-xs">❌ Abbrechen</button>
+                <button onclick="alert('Funktion kommt im nächsten Google Script Update!')" class="bg-green-600 text-white p-4 rounded-2xl font-black uppercase text-xs shadow-lg">💾 Speichern</button>
+            </div>
+        </div>`;
+}
 window.onload = fetchData;
