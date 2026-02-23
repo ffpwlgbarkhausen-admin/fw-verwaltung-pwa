@@ -409,7 +409,28 @@ function showDetails(index) {
                 }).join('')}
             </div>
         </div>
-    </div>`;
+
+        <div class="bg-slate-50/50 dark:bg-slate-900/20 p-4 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 mt-2">
+            <p class="text-[10px] uppercase font-bold text-slate-400 mb-3 tracking-widest text-center italic">Laufbahn / Historie</p>
+            <div class="space-y-2">
+                ${p.Historie 
+                    ? p.Historie.split('|').reverse().map(e => { // .reverse() zeigt das Neueste oben!
+                        const parts = e.split(':');
+                        const datum = parts[0] ? parts[0].trim() : "";
+                        const grad = parts[1] ? parts[1].trim() : "";
+                        return `
+                            <div class="flex justify-between items-center text-[11px] bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+                                <span class="text-slate-500 font-medium">${datum}</span>
+                                <span class="font-black text-red-700 dark:text-red-400 flex items-center gap-1">
+                                    <span class="text-[8px] opacity-50">▲</span> ${grad}
+                                </span>
+                            </div>`;
+                      }).join('')
+                    : `<p class="text-[10px] text-slate-400 italic text-center py-2">Keine Einträge vorhanden</p>`
+                }
+            </div>
+        </div>
+        </div>`; // Das hier ist das Ende der space-y-4 Sektion
 
     document.getElementById('member-modal').classList.remove('hidden');
 }
